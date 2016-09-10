@@ -1,16 +1,108 @@
-import psycopg2.extras
-from sklearn import tree  
-from sklearn.naive_bayes import BernoulliNB   
-from sklearn import datasets 
-from numpy import array
-from StringIO import StringIO 
-import pdb 
-import matplotlib 
-matplotlib.use('Agg') 
-import matplotlib.pyplot as plt 
-import codecs 
-import json 
-import os
+# $ export COLOREDLOGS_LOG_FORMAT='%(asctime)s - %(message)s'
+
+import logging
+logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+# import coloredlogs
+# coloredlogs.install(level='INFO')
+# coloredlogs.install(level='DEBUG')
+# coloredlogs.install(level='ERROR')
+
+logging.info("Loading libraries ...\n")
+
+try:   
+    logging.info("Started loading pdb")
+    import pdb 
+    logging.debug("Pdb loaded successfully")
+except:
+    logging.error("Pdb loading failed")
+
+try:
+    logging.info("Started loading psycopg2")
+    import psycopg2.extras
+    logging.debug("Psycopg2 loaded successfully")
+except:
+    logging.error("Psycopg2 loading failed")
+
+try:
+    logging.info("Started loading nltk")
+    import nltk
+    logging.debug("Nltk loaded successfully")
+except:
+    logging.error("Nltk loading failed")
+
+try:
+    logging.info("Started loading sklearn.tree")
+    from sklearn import tree  
+    logging.debug("Sklearn.tree loaded successfully")
+except:
+    logging.error("Sklearn.tree loading failed")
+
+try:
+    logging.info("Started loading sklearn.naive_bayes.BernoulliNB")
+    from sklearn.naive_bayes import BernoulliNB   
+    logging.debug("Sklearn.naive_bayes.BernoulliNB loaded successfully")
+except:
+    logging.error("Sklearn.naive_bayes.BernoulliNB loading failed")
+
+try:
+    logging.info("Started loading sklearn.datasets")
+    from sklearn import datasets 
+    logging.debug("Sklearn.datasets loaded successfully")
+except:
+    logging.error("Sklearn.datasets loading failed")
+
+try:
+    logging.info("Started loading numpy.array")
+    from numpy import array
+    logging.debug("Numpy.array loaded successfully")
+except:
+    logging.error("Numpy.array loading failed")
+
+try:
+    logging.info("Started loading StringIO.StringIO")
+    from StringIO import StringIO 
+    logging.debug("StringIO loaded successfully")
+except:
+    logging.error("StringIO loading failed")
+
+try:
+    logging.info("Started loading matplotlib")
+    import matplotlib 
+    matplotlib.use('Agg') 
+    logging.debug("Matplotlib loaded successfully")
+except:
+    logging.error("Matplotlib loading failed")
+
+try:
+    logging.info("Started loading matplotlib.pyplot")
+    import matplotlib.pyplot as plt 
+    logging.debug("Matplotlib.pyplot loaded successfully")
+except:
+    logging.error("Matplotlib.pyplot loading failed")
+
+try:
+    logging.info("Started loading codecs")
+    import codecs 
+    logging.debug("Codecs loaded successfully")
+except:
+    logging.error("Codecs loading failed")
+
+try:
+    logging.info("Started loading json")
+    import json 
+    logging.debug("Json loaded successfully")
+except:
+    logging.error("Json loading failed")
+
+try:
+    logging.info("Started loading os")
+    import os
+    logging.debug("Os loaded successfully")
+except:
+    logging.error("Os loading failed")
+
+logging.warning("\nFinished loading libraries\n")    
+
 try: 
     # Connection between Python and PostgreSQL
 #     conn = psycopg2.connect()
@@ -31,6 +123,11 @@ try:
     
     attributes_folder = os.path.expanduser('~/Attributes/') 
 
+    sentiment_analysis = { 
+        "user_id": "",
+        "sentiment": set(),
+    } 
+
     # Dictionary of months 
     months = { 
         'Jan': '01',
@@ -48,6 +145,8 @@ try:
     } 
     # End of dictionary
     
+try:
+    logging.info("Loading dict of sentiments")
     # Dictionary of sentiments
     sentiments = { 
         'fear/anxiety': ['anxiety', 'anxious', 'catastrophic', 'concern', 'disaster', 'emergency', 'fear', 'insecure', 'panic', 'scared', 'terror', 'threat', 'trouble', 'warning', 'worry'], 
@@ -59,12 +158,12 @@ try:
         'law enforcement': ['action', 'ambulance', 'command', 'medic', 'operation', 'planes', 'police', 'cops', 'FBI', 'security', 'recover', 'rescue', 'response', 'restore', 'safe', 'safety', 'save', 'shut', 'stay', 'survive', 'suspend'], 
     }
     # End of dictionary
+    logging.debug("Dict of sentiments loaded successfully")
+except:
+    logging.error("Dict of sentiments loaded failed")
 
-    sentiment_analysis = { 
-        "user_id": "",
-        "sentiment": set(),
-    } 
-
+try:
+    logging.info("Creating charateristics files")
     # Creation of files
     File = open(attributes_folder + 'text.txt', 'w+') 
     File.close() 
@@ -95,7 +194,9 @@ try:
     File = open(attributes_folder + 'user__listed_count.txt', 'w+')
     File.close() 
     # End of file creation 
-    
+    logging.debug("Files created successfully")
+except:
+    logging.error("Files creation failed")
     # Returns all values of a given attribute 
     def Get_Field_Values(field): 
     # Search for "attribute_folder + field + 'txt'" in the directory
@@ -417,8 +518,6 @@ try:
     # Bernoulli
     clf_bernoulli = BernoulliNB()
     clf_bernoulli.fit(array(matrix_user_features_all_users), array(class_labels_SPAM_NOTSPAM))
-    # print(clf_bernoulli.predict(array([0, 0, 1, 1, 0, 0, 0])))
-    print clf_bernoulli
 
     # ---
 
@@ -502,5 +601,7 @@ try:
                     File.write(str(s))
     File.close()
 
+try:
+    print()
 except Exception as ex:
     print ex

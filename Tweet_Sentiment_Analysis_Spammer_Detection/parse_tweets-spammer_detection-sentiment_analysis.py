@@ -13,56 +13,57 @@ try:
     logging.info("Started loading pdb")
     import pdb
     logging.debug("Pdb loaded successfully")
-except:
+except Exception as ex:
     logging.error("Pdb loading failed")
 
 try:
     logging.info("Started loading psycopg2")
     import psycopg2.extras
     logging.debug("Psycopg2 loaded successfully")
-except:
+
+except Exception as ex:
     logging.error("Psycopg2 loading failed")
 
 try:
     logging.info("Started loading nltk")
     import nltk
     logging.debug("Nltk loaded successfully")
-except:
+except Exception as ex:
     logging.error("Nltk loading failed")
 
 try:
     logging.info("Started loading sklearn.tree")
     from sklearn import tree
     logging.debug("Sklearn.tree loaded successfully")
-except:
+except Exception as ex:
     logging.error("Sklearn.tree loading failed")
 
 try:
     logging.info("Started loading sklearn.naive_bayes.BernoulliNB")
     from sklearn.naive_bayes import BernoulliNB
     logging.debug("Sklearn.naive_bayes.BernoulliNB loaded successfully")
-except:
+except Exception as ex:
     logging.error("Sklearn.naive_bayes.BernoulliNB loading failed")
 
 try:
     logging.info("Started loading sklearn.datasets")
     from sklearn import datasets
     logging.debug("Sklearn.datasets loaded successfully")
-except:
+except Exception as ex:
     logging.error("Sklearn.datasets loading failed")
 
 try:
     logging.info("Started loading numpy.array")
     from numpy import array
     logging.debug("Numpy.array loaded successfully")
-except:
+except Exception as ex:
     logging.error("Numpy.array loading failed")
 
 try:
     logging.info("Started loading StringIO.StringIO")
     from StringIO import StringIO
     logging.debug("StringIO loaded successfully")
-except:
+except Exception as ex:
     logging.error("StringIO loading failed")
 
 try:
@@ -70,35 +71,35 @@ try:
     import matplotlib
     matplotlib.use('Agg')
     logging.debug("Matplotlib loaded successfully")
-except:
+except Exception as ex:
     logging.error("Matplotlib loading failed")
 
 try:
     logging.info("Started loading matplotlib.pyplot")
     import matplotlib.pyplot as plt
     logging.debug("Matplotlib.pyplot loaded successfully")
-except:
+except Exception as ex:
     logging.error("Matplotlib.pyplot loading failed")
 
 try:
     logging.info("Started loading codecs")
     import codecs
     logging.debug("Codecs loaded successfully")
-except:
+except Exception as ex:
     logging.error("Codecs loading failed")
 
 try:
     logging.info("Started loading json")
     import json
     logging.debug("Json loaded successfully")
-except:
+except Exception as ex:
     logging.error("Json loading failed")
 
 try:
     logging.info("Started loading os")
     import os
     logging.debug("Os loaded successfully")
-except:
+except Exception as ex:
     logging.error("Os loading failed")
 
 logging.info("\nFinished loading libraries\n")
@@ -147,7 +148,7 @@ try:
     }
     # End of dictionary
     logging.debug("Dicitonaries created successfully")
-except:
+except Exception as ex:
     logging.error("Dictionaries creation failed")
 
 try:
@@ -164,7 +165,7 @@ try:
     }
     # End of dictionary
     logging.debug("Dict of sentiments loaded successfully")
-except:
+except Exception as ex:
     logging.error("Dict of sentiments loaded failed")
 
 try:
@@ -200,7 +201,7 @@ try:
     File.close()
     # End of file creation
     logging.debug("Files created successfully")
-except:
+except Exception as ex:
     logging.error("Files creation failed")
     # Returns all values of a given attribute
 def Get_Field_Values(field):
@@ -311,7 +312,7 @@ try:
     # End of file filling
 
     logging.debug("Parsing and files' writing completed successfully")
-except:
+except Exception as ex:
     logging.error("Parsing and files' writing completed failed")
 
 try:
@@ -332,11 +333,11 @@ try:
         times.append(hour + ':' + minutes + ':' + seconds)
     
     logging.debug("Data and time specified successfully")
-except:
+except Exception as ex:
     logging.error("Data and time specified failed")
     
 try:
-    print("\n ----- SAMPLE CHARACTERISCS ----- \n")
+    logging.info("\n ----- SAMPLE CHARACTERISTICS ----- \n")
 
     # Count number of tweets
     tweets_count = len(Get_Field_Values('tweet_id'))
@@ -357,10 +358,10 @@ try:
     tweets_per_user = list((map(int, Get_Field_Values('user_id')).count(x)) for x in map(int, Get_Field_Values('user_id')))
     users_tweeted = list((tweets_per_user.count(x)) for x in set(tweets_per_user))
     times_tweeted = list(set(tweets_per_user))
-except:
+except Exception as ex:
     logging.error("Error displaying results")
 
-print("\n ---------------- \n")
+logging.info("\n ---------------- \n")
 
 try:
     logging.info("Saving graphic \'Qty of tweets per user\' to file")
@@ -373,7 +374,7 @@ try:
     plt.savefig("tweets_per_user.jpg")
 
     logging.debug("Graphic \'Qty of tweets per user\' successfully saved to file")
-except:
+except Exception as ex:
     logging.error("Failed to save graphic \'Qty of tweets per user\' to file")
 
 try:
@@ -392,7 +393,7 @@ try:
     plt.savefig("tweets_per_day.jpg")
     # plt.show()
     logging.debug("Graphic \'Qty of tweets per day\' successfully saved to file")
-except:
+except Exception as ex:
     logging.error("Failed to save graphic \'Qty of tweets per day\' to file")
 
 try:
@@ -543,9 +544,13 @@ try:
             # matrix_data.append([sum(matrix_user_features)])
             matrix_data.append([prob_total])
 
+    logging.debug("Sample data analyzed")
+except Exception as ex:
+    logging.error("Error analyzing sample data")
 
-
-    # --- Train classifier ---
+try:
+    logging.info("Training classifier...\n")
+    
 
     # Binary Decision Tree
     clf_binary_decision_tree = tree.DecisionTreeClassifier()
@@ -556,10 +561,12 @@ try:
     clf_bernoulli = BernoulliNB()
     clf_bernoulli.fit(array(matrix_user_features_all_users), array(class_labels_SPAM_NOTSPAM))
 
-    # ---
+    logging.debug("Classifiers trained")
+except Exception as ex:
+    logging.error("Error training classifier")
 
-
-    print("\n --- CLASSIFICATION RESULTS --- \n")
+try:
+    logging.info("\n --- CLASSIFICATION RESULTS --- \n")
 
     with open(attributes_folder + 'CriteriaClassification_vs_ManualClassification.txt', 'w+') as f:
         f.write("Criteria\tManual\tBernoulli\tDecision Tree\n")
@@ -576,9 +583,11 @@ try:
     else:
         print("NOT SPAM")
 
-#    print("\nWeights for each feature, according to Bernoulli classification:")
-#    print clf_bernoulli.predict_proba( array(matrix_user_features_all_users))
+except Exception as ex:
+    logging.error("Error displaying classification results")
 
+try:
+    logging.info("Exporting trained data to file")
     # Export trained data to file
     with open(attributes_folder + 'trained_data_binary_decision_tree.dot', 'w') as f:
         f = tree.export_graphviz(clf_binary_decision_tree, out_file=f)
@@ -586,9 +595,12 @@ try:
 #     with open(attributes_folder + 'trained_data_bernoulli.dot', 'w') as f:
 #         f = tree.export_graphviz(clf_bernoulli, out_file=f)
 
-    # ---
+    logging.debug("Trained data saved to file")
+except Exception as ex:
+    logging.error("Error saving trained data to file")
 
-
+try:
+    logging.info("Detecting spammers... ")
     # Determinate if the probable spammer is above threshold
     # And count the total number of probable spammers
     totalProbableSpammers = 0
@@ -620,6 +632,12 @@ try:
     for item in dict_threshold_0_9.keys():
         count += dict_threshold_0_9[item]
     print "Over 0.9 True positives: %d\n" % count
+    
+except Exception as ex:
+    logging.error("Error detecting spammers")
+
+try:
+    logging.info("Analyzing sentiments...")
 
     # Does the sentiment analysis
     # Writes the sentiment fo each user to a file
@@ -637,5 +655,7 @@ try:
                     s = "{\"user_id:\" %s, \"tweet_id\": %s, \"sentiments\": %s}\n" % (sentiment_analysis["user_id"], tweet_id, list(sentiment_analysis["sentiment"]))
                     File.write(str(s))
     File.close()
+    logging.debug("Sentiments analyzed and saved to file")
 except Exception as ex:
+    logging.error("Error analyzing sentiments or saving it to file")
     print ex

@@ -397,7 +397,7 @@ except Exception as ex:
     logging.error("Failed to save graphic \'Qty of tweets per day\' to file")
 
 try:
-    logging.info("\nAnalyzing sample data...\n")
+    logging.info("\nAnalyzing sample data...")
     dict_probable_spammers = {}
     source = set()
     probable_spammer = []
@@ -549,7 +549,7 @@ except Exception as ex:
     logging.error("Error analyzing sample data")
 
 try:
-    logging.info("Training classifier...\n")
+    logging.info("\nTraining classifier...")
     
 
     # Binary Decision Tree
@@ -566,7 +566,7 @@ except Exception as ex:
     logging.error("Error training classifier")
 
 try:
-    logging.info("\n --- CLASSIFICATION RESULTS --- \n")
+    logging.info("\n --- CLASSIFICATION RESULTS --- ")
 
     with open(attributes_folder + 'CriteriaClassification_vs_ManualClassification.txt', 'w+') as f:
         f.write("Criteria\tManual\tBernoulli\tDecision Tree\n")
@@ -582,7 +582,7 @@ try:
         print("SPAM")
     else:
         print("NOT SPAM")
-
+    print("\n")
 except Exception as ex:
     logging.error("Error displaying classification results")
 
@@ -600,7 +600,7 @@ except Exception as ex:
     logging.error("Error saving trained data to file")
 
 try:
-    logging.info("Detecting spammers... ")
+    logging.info("\nDetecting probable spammers... ")
     # Determinate if the probable spammer is above threshold
     # And count the total number of probable spammers
     totalProbableSpammers = 0

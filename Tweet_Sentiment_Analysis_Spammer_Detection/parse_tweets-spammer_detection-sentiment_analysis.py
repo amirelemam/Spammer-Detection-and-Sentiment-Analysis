@@ -109,21 +109,44 @@ logging.info("\nFinished loading libraries\n")
 #     conn = psycopg2.connect()
 #     # Create cursor
 #     cur = conn.cursor()
-#     # Execute the query
+#     # Execute the query - Download all data from database
 #     cur.execute("""SELECT json FROM paris limit 10000""")
 #     # Save results to file
 #     _data = codecs.open(os.path.expanduser('~/Desktop/data10000.txt'), 'w')
-#     result = []
 #     for row in cur.fetchall():
-#         result.append(row[0])
-#         _data.write(json.dumps(result[0]) + '\n')
+#         _data.write(json.dumps(row[0]) + '\n')
 #     _data.close()
 #     # Close cursor and database connection
 #     cur.close()
 #     conn.close()
-try:
-    attributes_folder = os.path.expanduser('~/Attributes/')
+# except:
+#     logging.error("Error reading all data from database")
 
+try:
+    # Connection between Python and PostgreSQL
+    conn = psycopg2.connect()
+    # Create cursor
+    cur = conn.cursor()
+    # Execute the query - Download trained data from database
+    cur.execute("""\COPY (select p.json from paris_analise pa inner join
+    paris p on p.codtweet = pa.codtweet) TO ‘~/trained_data.txt’""")
+    # Save results to file
+    _data = codecs.open(os.path.expanduser('~/Desktop/trained_data.txt'), 'w')
+    for row in cur.fetchall():
+        _data.write(json.dumps(row[0]) + '\n')
+    _data.close()
+    # Close cursor and database connection
+    cur.close()
+    conn.close()
+except:
+    logging.error("Error reading trained data from database")
+
+with open("/trained_data.txt", "r") as s, open("/clean_data.txt", "w+") as d:
+    for line in s:
+        line = line.replace('\\\\"', "@")
+        d.write(str(line))
+
+try:
     logging.info("Creating dictionaries")
 
     sentiment_analysis = {
@@ -155,13 +178,25 @@ try:
     logging.info("Loading dict of sentiments")
     # Dictionary of sentiments
     sentiments = {
-        'fear/anxiety': ['anxiety', 'anxious', 'catastrophic', 'concern', 'disaster', 'emergency', 'fear', 'insecure', 'panic', 'scared', 'terror', 'threat', 'trouble', 'warning', 'worry'],
-        'shock': ['taken aback', 'aback', 'floor', 'god bless', 'omg', 'shock', 'stun', 'sudden', 'wtf', 'wth'],
-        'response': ['act', 'asap', 'escape', 'evacuate', 'flee', 'help', 'hide', 'run'],
-        'need information': ['breaking news', 'call', 'foul play', 'incident', 'phone', 'report', 'situation', 'unconfirmed'],
-        'threat': ['accident', 'attack', 'bomb', 'bullet', 'collapse', 'crash', 'explode', 'explosion', 'fire', 'gun', 'hijack', 'hit', 'hostage', 'plane', 'responsability', 'responsable', 'rifle', 'shoot', 'shot', 'struck', 'suicide', 'terrorism'],
-        'casualities': ['blood', 'body', 'bodies', 'corpses', 'corpse', 'dead', 'injury', 'injure', 'kill', 'wounded'],
-        'law enforcement': ['action', 'ambulance', 'command', 'medic', 'operation', 'planes', 'police', 'cops', 'FBI', 'security', 'recover', 'rescue', 'response', 'restore', 'safe', 'safety', 'save', 'shut', 'stay', 'survive', 'suspend'],
+        'fear/anxiety': ['anxiety', 'anxious', 'catastrophic', 'concern',
+            'disaster', 'emergency', 'fear', 'insecure', 'panic', 'scared',
+            'terror', 'threat', 'trouble', 'warning', 'worry'],
+        'shock': ['taken aback', 'aback', 'floor', 'god bless', 'omg', 'shock',
+            'stun', 'sudden', 'wtf', 'wth'],
+        'response': ['act', 'asap', 'escape', 'evacuate', 'flee', 'help',
+            'hide', 'run'],
+        'need information': ['breaking news', 'call', 'foul play', 'incident',
+            'phone', 'report', 'situation', 'unconfirmed'],
+        'threat': ['accident', 'attack', 'bomb', 'bullet', 'collapse', 'crash',
+            'explode', 'explosion', 'fire', 'gun', 'hijack', 'hit', 'hostage',
+            'plane', 'responsability', 'responsable', 'rifle', 'shoot', 'shot',
+            'struck', 'suicide', 'terrorism'],
+        'casualities': ['blood', 'body', 'bodies', 'corpses', 'corpse', 'dead',
+            'injury', 'injure', 'kill', 'wounded'],
+        'law enforcement': ['action', 'ambulance', 'command', 'medic',
+            'operation', 'planes', 'police', 'cops', 'FBI', 'security',
+            'recover', 'rescue', 'response', 'restore', 'safe', 'safety',
+            'save', 'shut', 'stay', 'survive', 'suspend'],
     }
     # End of dictionary
     logging.debug("Dict of sentiments loaded successfully")
@@ -171,33 +206,33 @@ except Exception as ex:
 try:
     logging.info("Creating charateristics files")
     # Creation of files
-    File = open(attributes_folder + 'text.txt', 'w+')
+    File = open('Attributes/text.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'user_id.txt', 'w+')
+    File = open('/Attributes/user_id.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'tweet_id.txt', 'w+')
+    File = open('/Attributes/tweet_id.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'favorite_count.txt', 'w+')
+    File = open('/Attributes/favorite_count.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'source.txt', 'w+')
+    File = open('/Attributes/source.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'entities__user_mentions.txt', 'w+')
+    File = open('/Attributes/entities__user_mentions.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'entities__hashtags.txt', 'w+')
+    File = open('/Attributes/entities__hashtags.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'user__followers_count.txt', 'w+')
+    File = open('/Attributes/user__followers_count.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'user__friends_count.txt', 'w+')
+    File = open('/Attributes/user__friends_count.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'geo.txt', 'w+')
+    File = open('/Attributes/geo.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'created_at.txt', 'w+')
+    File = open('/Attributes/created_at.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'user__statuses_count.txt', 'w+')
+    File = open('/Attributes/user__statuses_count.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'user__favourites_count.txt', 'w+')
+    File = open('/Attributes/user__favourites_count.txt', 'w+')
     File.close()
-    File = open(attributes_folder + 'user__listed_count.txt', 'w+')
+    File = open('/Attributes/user__listed_count.txt', 'w+')
     File.close()
     # End of file creation
     logging.debug("Files created successfully")
@@ -206,7 +241,7 @@ except Exception as ex:
     # Returns all values of a given attribute
 def Get_Field_Values(field):
 # Search for "attribute_folder + field + 'txt'" in the directory
-    File = open(attributes_folder + field + '.txt', 'r')
+    File = open('/Attributes/' + field + '.txt', 'r')
     if File > 0:  # If file exists and is not blank
         attributes_list = []
         for line in File:
@@ -218,102 +253,128 @@ def Get_Field_Values(field):
         return []
 # End of function
     
+count = 0
 try:
     logging.info("Parsing tweets and writing to file")
     
     # Fill each attribute file with one attribute value per line
-    with open(os.path.expanduser('~/json.txt'), 'r') as File:
+    with open(os.path.expanduser('~/clean_data.txt'), 'r') as File:
         for line in File:
             # Parse tweet from file to JSON format
             try:
                 line_object = json.loads(line)
-
+    
                 # Save total tweets to file
-                File = codecs.open(attributes_folder + 'user__statuses_count.txt', 'a', encoding = 'utf-8')
+                File = codecs.open('/Attributes/user__statuses_count.txt', 'a',
+                        encoding = 'utf-8')
                 File.write(str(line_object['user']['statuses_count']) + '\n')
                 File.close()
 
                 # Save number of times the user has been added to
                 # someone else's list
-                File = codecs.open(attributes_folder + 'user__listed_count.txt', 'a', encoding = 'utf-8')
+                File = codecs.open('/Attributes/user__listed_count.txt', 'a',
+                        encoding = 'utf-8')
                 File.write(str(line_object['user']['listed_count']) + '\n')
                 File.close()
 
                 # Save to file number of times the user has been added to someone else's favorite list
-                File = codecs.open(attributes_folder + 'user__favourites_count.txt', 'a', encoding = 'utf-8')
+                File = codecs.open('/Attributes/user__favourites_count.txt',
+                        'a', encoding = 'utf-8')
                 File.write(str(line_object['user']['favourites_count']) + '\n')
                 File.close()
 
                 # Save tweet content to file
-                File = codecs.open(attributes_folder + 'text.txt', 'a', encoding = 'utf-8')
+                File = codecs.open('/Attributes/text.txt', 'a',
+                        encoding = 'utf-8')
                 if line_object['text'] is not None:
                     File.write(line_object['text'])
                 File.write('\n')
                 File.close()
 
                 # Save user id to file
-                File = codecs.open(attributes_folder + 'user_id.txt', 'a', encoding = 'utf-8')
-                File.write(str(line_object['id']) + '\n' if line_object['id'] is not None else '\n')
+                File = codecs.open('/Attributes/user_id.txt', 'a',
+                        encoding = 'utf-8')
+                if line_object['id'] is not None:
+                    File.write(str(line_object['id']))
+                File.write('\n')
                 File.close()
 
                 # Save tweet id to file
-                File = codecs.open(attributes_folder + 'tweet_id.txt', 'a', encoding = 'utf-8')
+                File = codecs.open('/Attributes/tweet_id.txt', 'a',
+                        encoding = 'utf-8')
                 File.write(str(line_object['timestamp_ms']) + '\n')
                 File.close()
 
                 # Save to file how many times user has been favorited
-                File = codecs.open(attributes_folder + 'favorite_count.txt', 'a', encoding='utf-8')
-                File.write(str(line_object['favorite_count']) + '\n' if line_object['favorite_count'] is not None else '\n')
+                File = codecs.open('/Attributes/favorite_count.txt', 'a',
+                        encoding='utf-8')
+                if line_object['favorite_count'] is not None:
+                    File.write(str(line_object['favorite_count'])) 
+                File.write('\n')
                 File.close()
 
                 # Save to file channel used by user to tweet
-                File = codecs.open(attributes_folder + 'source.txt', 'a', encoding = 'utf-8')
-                File.write(line_object['source'] + '\n' if line_object['source'] is not None else '\n')
+                File = codecs.open('/Attributes/source.txt', 'a',
+                        encoding = 'utf-8')
+                if line_object['source'] is not None:
+                    File.write(line_object['source'])
+                File.write('n')
                 File.close()
 
                 # Save to file total of user mentions
-                File = codecs.open(attributes_folder + 'entities__user_mentions.txt', 'a', encoding = 'utf-8')
-                File.write(str(line_object['entities']['user_mentions'][0]['id']) + '\n' if len(line_object['entities']['user_mentions']) > 0 else '\n')
+                File = codecs.open('/Attributes/entities__user_mentions.txt',
+                        'a', encoding = 'utf-8')
+                if len(line_object['entities']['user_mentions']) > 0:
+                    File.write(str(line_object['entities']['user_mentions'][0]
+                        ['id']))
+                File.write('\n')
                 File.close()
 
                 # Save to file hashtags used in the tweet
-                File = codecs.open(attributes_folder + 'entities__hashtags.txt', 'a', encoding = 'utf-8')
+                File = codecs.open('/Attributes/entities__hashtags.txt', 'a',
+                        encoding = 'utf-8')
                 if len(line_object['entities']['hashtags']) > 0:
                     File.write(str(line_object['entities']['hashtags']))
                 File.write('\n')
                 File.close()
 
                 # Save to file user's followers
-                File = codecs.open(attributes_folder + 'user__followers_count.txt', 'a', encoding='utf-8')
+                File = codecs.open('/Attributes/user__followers_count.txt',
+                        'a', encoding='utf-8')
                 File.write(str(line_object['user']['followers_count']) + '\n')
                 File.close()
 
                 # Save to file user's friends/following count
-                File = codecs.open(attributes_folder + 'user__friends_count.txt', 'a', encoding='utf-8')
+                File = codecs.open('/Attributes/user__friends_count.txt', 'a',
+                        encoding='utf-8')
                 File.write(str(line_object['user']['friends_count']) + '\n')
                 File.close()
 
                 # Save to file tweet's geolocation information
-                File = codecs.open(attributes_folder + 'geo.txt', 'a', encoding= 'utf-8')
+                File = codecs.open('/Attributes/geo.txt', 'a',
+                        encoding='utf-8')
                 if line_object['geo'] is not None:
                     File.write(str(line_object['geo']))
                 File.write('\n')
                 File.close()
 
                 # Save to file date/time when tweet was created
-                File = codecs.open(attributes_folder + 'created_at.txt', 'a', encoding='utf-8')
+                File = codecs.open('/Attributes/created_at.txt', 'a',
+                        encoding='utf-8')
                 if len(line_object['created_at']) > 0:
                     File.write(str(line_object["created_at"]))
                 File.write('\n')
                 File.close()
-
+                count += 1
             except:
                 pass
     # End of file filling
 
-    logging.debug("Parsing and files' writing completed successfully")
+    logging.debug("Parsing and writing files completed successfully")
 except Exception as ex:
     logging.error("Parsing and files' writing completed failed")
+
+print count
 
 try:
     logging.info("Specifying date and time ranges")
@@ -348,7 +409,10 @@ try:
     print "Number of unique users: %d" % unique_users
 
     # Average of tweets per user with graphic
-    average_tweets_user = tweets_count / unique_users if unique_users != 0  else 0
+    if unique_users != 0:
+        average_tweets_user = tweets_count / unique_users
+    else:
+        average_tweets_user = 0
     print "Average of tweets per user: %s" % average_tweets_user
 
     # Date/time range
@@ -505,7 +569,8 @@ try:
             criteria_prob.append(prob_total)
 
             # Add probability of being a spammer to a dictionary
-            if 1 - prob_total > 0.5: dict_probable_spammers[str(user_id)] = prob_total
+            if 1 - prob_total > 0.5:
+                dict_probable_spammers[str(user_id)] = prob_total
 
             # Test false positives and true positives
             if classificacao.strip() == "SPAM":
@@ -554,12 +619,14 @@ try:
 
     # Binary Decision Tree
     clf_binary_decision_tree = tree.DecisionTreeClassifier()
-    clf_binary_decision_tree = clf_binary_decision_tree.fit(array(matrix_data), array(class_labels_SPAM_NOTSPAM))
+    clf_binary_decision_tree = clf_binary_decision_tree.fit(array(matrix_data),
+            array(class_labels_SPAM_NOTSPAM))
     # clf_binary_decision_tree = clf_binary_decision_tree.fit(matrix_data, class_labels, class_weight_dict)
 
     # Bernoulli
     clf_bernoulli = BernoulliNB()
-    clf_bernoulli.fit(array(matrix_user_features_all_users), array(class_labels_SPAM_NOTSPAM))
+    clf_bernoulli.fit(array(matrix_user_features_all_users),
+            array(class_labels_SPAM_NOTSPAM))
 
     logging.debug("Classifiers trained")
 except Exception as ex:
@@ -568,12 +635,14 @@ except Exception as ex:
 try:
     logging.info("\n --- CLASSIFICATION RESULTS --- ")
 
-    with open(attributes_folder + 'CriteriaClassification_vs_ManualClassification.txt', 'w+') as f:
+    with open('/Attributes/Criteria_vs_ManualClassification.txt',
+            'w+') as f:
         f.write("Criteria\tManual\tBernoulli\tDecision Tree\n")
     print("\nCriteria\tManual\tBernoulli\tDecision Tree")
 
-    for criteria, classification, features in zip(matrix_data, class_labels_SPAM_NOTSPAM, matrix_user_features_all_users):
-        with open(attributes_folder + 'CriteriaClassification_vs_ManualClassification.txt', 'a') as f:
+    for criteria, classification, features in zip(matrix_data,
+            class_labels_SPAM_NOTSPAM, matrix_user_features_all_users):
+        with open('/Attributes/Criteria_vs_ManualClassification.txt', 'a') as f:
             f.write("%f\t%s\t%s\t%s\n" % (criteria[0], classification, clf_bernoulli.predict(array(features))[0], clf_binary_decision_tree.predict(array(sum(list(features))))[0]))
         print "%f\t%s\t%s\t%s" % (criteria[0], classification, clf_bernoulli.predict(array(features))[0], clf_binary_decision_tree.predict(array(sum(list(features))))[0])
 
@@ -589,7 +658,7 @@ except Exception as ex:
 try:
     logging.info("Exporting trained data to file")
     # Export trained data to file
-    with open(attributes_folder + 'trained_data_binary_decision_tree.dot', 'w') as f:
+    with open('/Attributes/trained_data_binary_decision_tree.dot', 'w') as f:
         f = tree.export_graphviz(clf_binary_decision_tree, out_file=f)
 
 #     with open(attributes_folder + 'trained_data_bernoulli.dot', 'w') as f:
@@ -604,10 +673,11 @@ try:
     # Determinate if the probable spammer is above threshold
     # And count the total number of probable spammers
     totalProbableSpammers = 0
-    File = open(attributes_folder + "probable_spammers.txt", "w+")
+    File = open("/Attributes/probable_spammers.txt", "w+")
     for probableSpammer in dict_probable_spammers.keys():
 #        if dict_probable_spammers[probableSpammer] > 0.1:
-        s = "{%s: %s}\n" % (probableSpammer,  dict_probable_spammers[probableSpammer])
+        s = "{%s: %s}\n" % (probableSpammer,
+                dict_probable_spammers[probableSpammer])
         File.write(str(s))
         totalProbableSpammers += 1
     File.close()
@@ -641,8 +711,8 @@ try:
 
     # Does the sentiment analysis
     # Writes the sentiment fo each user to a file
-    File = open(attributes_folder + "sentiment_analysis.txt", "w+")
-    with open(attributes_folder + "text.txt", "r") as file_tweet_text, open(attributes_folder + "user_id.txt", "r") as file_user_id, open(attributes_folder + "tweet_id.txt", "r") as file_tweet_id:
+    File = open("/Attributes/sentiment_analysis.txt", "w+")
+    with open("/Attributes/text.txt", "r") as file_tweet_text, open("/Attributes/user_id.txt", "r") as file_user_id, open("/Attributes/tweet_id.txt", "r") as file_tweet_id:
         for tweet_text, user_id, tweet_id in zip(file_tweet_text, file_user_id, file_tweet_id):
             for key in sentiments.keys():
                 for i in range(len(sentiments[key])):

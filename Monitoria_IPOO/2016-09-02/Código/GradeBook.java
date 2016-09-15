@@ -9,7 +9,6 @@ public class GradeBook
 	public GradeBook( String name )
 	{
 		courseName = name; // inicializa courseName
-		//professorName = professor;
 	} // fim do construtor
 
 	// metodo para configurar o nome do curso

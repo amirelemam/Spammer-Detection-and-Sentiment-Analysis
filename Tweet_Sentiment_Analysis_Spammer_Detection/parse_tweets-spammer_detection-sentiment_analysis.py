@@ -122,29 +122,29 @@ logging.info("\nFinished loading libraries\n")
 # except:
 #     logging.error("Error reading all data from database")
 
-try:
-    # Connection between Python and PostgreSQL
-    conn = psycopg2.connect()
-    # Create cursor
-    cur = conn.cursor()
-    # Execute the query - Download trained data from database
-    cur.execute("""\COPY (select p.json from paris_analise pa inner join
-    paris p on p.codtweet = pa.codtweet) TO ‘~/trained_data.txt’""")
-    # Save results to file
-    _data = codecs.open(os.path.expanduser('~/Desktop/trained_data.txt'), 'w')
-    for row in cur.fetchall():
-        _data.write(json.dumps(row[0]) + '\n')
-    _data.close()
-    # Close cursor and database connection
-    cur.close()
-    conn.close()
-except:
-    logging.error("Error reading trained data from database")
+# try:
+#     # Connection between Python and PostgreSQL
+#     conn = psycopg2.connect()
+#     # Create cursor
+#     cur = conn.cursor()
+#     # Execute the query - Download trained data from database
+#     cur.execute("""\COPY (select p.json from paris_analise pa inner join
+#     paris p on p.codtweet = pa.codtweet) TO ‘~/trained_data.txt’""")
+#     # Save results to file
+#     _data = codecs.open(os.path.expanduser('~/Desktop/trained_data.txt'), 'w')
+#     for row in cur.fetchall():
+#         _data.write(json.dumps(row[0]) + '\n')
+#     _data.close()
+#     # Close cursor and database connection
+#     cur.close()
+#     conn.close()
+# except:
+#     logging.error("Error reading trained data from database")
 
-with open("/trained_data.txt", "r") as s, open("/clean_data.txt", "w+") as d:
-    for line in s:
-        line = line.replace('\\\\"', "@")
-        d.write(str(line))
+# with open("~/trained_data.txt", "r") as s, open("~/clean_data.txt", "w+") as dest:
+#     for line in s:
+#         line = line.replace('\\\\"', "@")
+#         dest.write(str(line))
 
 try:
     logging.info("Creating dictionaries")
@@ -178,287 +178,18 @@ try:
     logging.info("Loading dict of sentiments")
     # Dictionary of sentiments
     sentiments = {
-        'fear/anxiety': ['anxiety', 'anxious', 'catastrophic', 'concern',
-            'disaster', 'emergency', 'fear', 'insecure', 'panic', 'scared',
-            'terror', 'threat', 'trouble', 'warning', 'worry'],
-        'shock': ['taken aback', 'aback', 'floor', 'god bless', 'omg', 'shock',
-            'stun', 'sudden', 'wtf', 'wth'],
-        'response': ['act', 'asap', 'escape', 'evacuate', 'flee', 'help',
-            'hide', 'run'],
-        'need information': ['breaking news', 'call', 'foul play', 'incident',
-            'phone', 'report', 'situation', 'unconfirmed'],
-        'threat': ['accident', 'attack', 'bomb', 'bullet', 'collapse', 'crash',
-            'explode', 'explosion', 'fire', 'gun', 'hijack', 'hit', 'hostage',
-            'plane', 'responsability', 'responsable', 'rifle', 'shoot', 'shot',
-            'struck', 'suicide', 'terrorism'],
-        'casualities': ['blood', 'body', 'bodies', 'corpses', 'corpse', 'dead',
-            'injury', 'injure', 'kill', 'wounded'],
-        'law enforcement': ['action', 'ambulance', 'command', 'medic',
-            'operation', 'planes', 'police', 'cops', 'FBI', 'security',
-            'recover', 'rescue', 'response', 'restore', 'safe', 'safety',
-            'save', 'shut', 'stay', 'survive', 'suspend'],
+        'fear/anxiety': ['anxiety', 'anxious', 'catastrophic', 'concern', 'disaster', 'emergency', 'fear', 'insecure', 'panic', 'scared', 'terror', 'threat', 'trouble', 'warning', 'worry'],
+        'shock': ['taken aback', 'aback', 'floor', 'god bless', 'omg', 'shock', 'stun', 'sudden', 'wtf', 'wth'],
+        'response': ['act', 'asap', 'escape', 'evacuate', 'flee', 'help', 'hide', 'run'],
+        'need information': ['breaking news', 'call', 'foul play', 'incident', 'phone', 'report', 'situation', 'unconfirmed'],
+        'threat': ['accident', 'attack', 'bomb', 'bullet', 'collapse', 'crash', 'explode', 'explosion', 'fire', 'gun', 'hijack', 'hit', 'hostage', 'plane', 'responsability', 'responsable', 'rifle', 'shoot', 'shot', 'struck', 'suicide', 'terrorism'],
+        'casualities': ['blood', 'body', 'bodies', 'corpses', 'corpse', 'dead', 'injury', 'injure', 'kill', 'wounded'],
+        'law enforcement': ['action', 'ambulance', 'command', 'medic', 'operation', 'planes', 'police', 'cops', 'FBI', 'security', 'recover', 'rescue', 'response', 'restore', 'safe', 'safety', 'save', 'shut', 'stay', 'survive', 'suspend'],
     }
     # End of dictionary
     logging.debug("Dict of sentiments loaded successfully")
 except Exception as ex:
     logging.error("Dict of sentiments loaded failed")
-
-try:
-    logging.info("Creating charateristics files")
-    # Creation of files
-    File = open('Attributes/text.txt', 'w+')
-    File.close()
-    File = open('/Attributes/user_id.txt', 'w+')
-    File.close()
-    File = open('/Attributes/tweet_id.txt', 'w+')
-    File.close()
-    File = open('/Attributes/favorite_count.txt', 'w+')
-    File.close()
-    File = open('/Attributes/source.txt', 'w+')
-    File.close()
-    File = open('/Attributes/entities__user_mentions.txt', 'w+')
-    File.close()
-    File = open('/Attributes/entities__hashtags.txt', 'w+')
-    File.close()
-    File = open('/Attributes/user__followers_count.txt', 'w+')
-    File.close()
-    File = open('/Attributes/user__friends_count.txt', 'w+')
-    File.close()
-    File = open('/Attributes/geo.txt', 'w+')
-    File.close()
-    File = open('/Attributes/created_at.txt', 'w+')
-    File.close()
-    File = open('/Attributes/user__statuses_count.txt', 'w+')
-    File.close()
-    File = open('/Attributes/user__favourites_count.txt', 'w+')
-    File.close()
-    File = open('/Attributes/user__listed_count.txt', 'w+')
-    File.close()
-    # End of file creation
-    logging.debug("Files created successfully")
-except Exception as ex:
-    logging.error("Files creation failed")
-    # Returns all values of a given attribute
-def Get_Field_Values(field):
-# Search for "attribute_folder + field + 'txt'" in the directory
-    File = open('/Attributes/' + field + '.txt', 'r')
-    if File > 0:  # If file exists and is not blank
-        attributes_list = []
-        for line in File:
-            attributes_list.append(line.rstrip('\n'))
-            File.close()
-            return attributes_list
-    else:
-        File.close()
-        return []
-# End of function
-    
-count = 0
-try:
-    logging.info("Parsing tweets and writing to file")
-    
-    # Fill each attribute file with one attribute value per line
-    with open(os.path.expanduser('~/clean_data.txt'), 'r') as File:
-        for line in File:
-            # Parse tweet from file to JSON format
-            try:
-                line_object = json.loads(line)
-    
-                # Save total tweets to file
-                File = codecs.open('/Attributes/user__statuses_count.txt', 'a',
-                        encoding = 'utf-8')
-                File.write(str(line_object['user']['statuses_count']) + '\n')
-                File.close()
-
-                # Save number of times the user has been added to
-                # someone else's list
-                File = codecs.open('/Attributes/user__listed_count.txt', 'a',
-                        encoding = 'utf-8')
-                File.write(str(line_object['user']['listed_count']) + '\n')
-                File.close()
-
-                # Save to file number of times the user has been added to someone else's favorite list
-                File = codecs.open('/Attributes/user__favourites_count.txt',
-                        'a', encoding = 'utf-8')
-                File.write(str(line_object['user']['favourites_count']) + '\n')
-                File.close()
-
-                # Save tweet content to file
-                File = codecs.open('/Attributes/text.txt', 'a',
-                        encoding = 'utf-8')
-                if line_object['text'] is not None:
-                    File.write(line_object['text'])
-                File.write('\n')
-                File.close()
-
-                # Save user id to file
-                File = codecs.open('/Attributes/user_id.txt', 'a',
-                        encoding = 'utf-8')
-                if line_object['id'] is not None:
-                    File.write(str(line_object['id']))
-                File.write('\n')
-                File.close()
-
-                # Save tweet id to file
-                File = codecs.open('/Attributes/tweet_id.txt', 'a',
-                        encoding = 'utf-8')
-                File.write(str(line_object['timestamp_ms']) + '\n')
-                File.close()
-
-                # Save to file how many times user has been favorited
-                File = codecs.open('/Attributes/favorite_count.txt', 'a',
-                        encoding='utf-8')
-                if line_object['favorite_count'] is not None:
-                    File.write(str(line_object['favorite_count'])) 
-                File.write('\n')
-                File.close()
-
-                # Save to file channel used by user to tweet
-                File = codecs.open('/Attributes/source.txt', 'a',
-                        encoding = 'utf-8')
-                if line_object['source'] is not None:
-                    File.write(line_object['source'])
-                File.write('n')
-                File.close()
-
-                # Save to file total of user mentions
-                File = codecs.open('/Attributes/entities__user_mentions.txt',
-                        'a', encoding = 'utf-8')
-                if len(line_object['entities']['user_mentions']) > 0:
-                    File.write(str(line_object['entities']['user_mentions'][0]
-                        ['id']))
-                File.write('\n')
-                File.close()
-
-                # Save to file hashtags used in the tweet
-                File = codecs.open('/Attributes/entities__hashtags.txt', 'a',
-                        encoding = 'utf-8')
-                if len(line_object['entities']['hashtags']) > 0:
-                    File.write(str(line_object['entities']['hashtags']))
-                File.write('\n')
-                File.close()
-
-                # Save to file user's followers
-                File = codecs.open('/Attributes/user__followers_count.txt',
-                        'a', encoding='utf-8')
-                File.write(str(line_object['user']['followers_count']) + '\n')
-                File.close()
-
-                # Save to file user's friends/following count
-                File = codecs.open('/Attributes/user__friends_count.txt', 'a',
-                        encoding='utf-8')
-                File.write(str(line_object['user']['friends_count']) + '\n')
-                File.close()
-
-                # Save to file tweet's geolocation information
-                File = codecs.open('/Attributes/geo.txt', 'a',
-                        encoding='utf-8')
-                if line_object['geo'] is not None:
-                    File.write(str(line_object['geo']))
-                File.write('\n')
-                File.close()
-
-                # Save to file date/time when tweet was created
-                File = codecs.open('/Attributes/created_at.txt', 'a',
-                        encoding='utf-8')
-                if len(line_object['created_at']) > 0:
-                    File.write(str(line_object["created_at"]))
-                File.write('\n')
-                File.close()
-                count += 1
-            except:
-                pass
-    # End of file filling
-
-    logging.debug("Parsing and writing files completed successfully")
-except Exception as ex:
-    logging.error("Parsing and files' writing completed failed")
-
-print count
-
-try:
-    logging.info("Specifying date and time ranges")
-    
-    # Create lists of all date/time
-    dates = []
-    times = []
-
-    for item in Get_Field_Values('created_at'):
-        month = item[4:7]
-        day = item[8:10]
-        year = item[26:30]
-        hour = item[11:13]
-        minutes = item[14:16]
-        seconds = item[17:19]
-        dates.append(day + '/' + month + '/' + year)
-        times.append(hour + ':' + minutes + ':' + seconds)
-    
-    logging.debug("Data and time specified successfully")
-except Exception as ex:
-    logging.error("Data and time specified failed")
-    
-try:
-    logging.info("\n ----- SAMPLE CHARACTERISTICS ----- \n")
-
-    # Count number of tweets
-    tweets_count = len(Get_Field_Values('tweet_id'))
-    print "Number of tweets: %d" % tweets_count
-
-    # Count number of unique users
-    unique_users = len(set(Get_Field_Values('user_id')))
-    print "Number of unique users: %d" % unique_users
-
-    # Average of tweets per user with graphic
-    if unique_users != 0:
-        average_tweets_user = tweets_count / unique_users
-    else:
-        average_tweets_user = 0
-    print "Average of tweets per user: %s" % average_tweets_user
-
-    # Date/time range
-    print "Date range: %s to %s" % (min(dates), max(dates))
-    print "Time range: %s to %s" % (min(times), max(times))
-
-    tweets_per_user = list((map(int, Get_Field_Values('user_id')).count(x)) for x in map(int, Get_Field_Values('user_id')))
-    users_tweeted = list((tweets_per_user.count(x)) for x in set(tweets_per_user))
-    times_tweeted = list(set(tweets_per_user))
-except Exception as ex:
-    logging.error("Error displaying results")
-
-logging.info("\n ---------------- \n")
-
-try:
-    logging.info("Saving graphic \'Qty of tweets per user\' to file")
-
-    # Plot bar graphic of tweets/user
-    plt.bar(times_tweeted, users_tweeted, width=1, color="blue")
-    plt.xlabel('# of tweets')
-    plt.ylabel('Qty users tweeted')
-    plt.title('# of tweets per user')
-    plt.savefig("tweets_per_user.jpg")
-
-    logging.debug("Graphic \'Qty of tweets per user\' successfully saved to file")
-except Exception as ex:
-    logging.error("Failed to save graphic \'Qty of tweets per user\' to file")
-
-try:
-    logging.info("Saving graphic \'Qty of tweets per day\' to file")
-    # Graphic of tweets/day
-    # Count number of tweets/day
-    dict_tweet_count = dict((x, dates.count(x)) for x in set(dates))
-    list_tweet_count = list((dates.count(x)) for x in set(dates))
-
-    # Plot bar graphic of tweets/day
-    x = range(len(list_tweet_count))
-    plt.bar(x, list_tweet_count, width=1, color="blue")
-    plt.xlabel('Day')
-    plt.ylabel('# of tweets')
-    plt.title('# of tweets per day')
-    plt.savefig("tweets_per_day.jpg")
-    # plt.show()
-    logging.debug("Graphic \'Qty of tweets per day\' successfully saved to file")
-except Exception as ex:
-    logging.error("Failed to save graphic \'Qty of tweets per day\' to file")
 
 try:
     logging.info("\nAnalyzing sample data...")
@@ -492,141 +223,268 @@ try:
     dict_threshold_0_9 = {}
     criteria_prob = []
     dict_classificacao_manual = {}
+except:
+    pass
 
-    # Goes through each tweet and assess if it is probably from a spammer
+count_tweets = 0
+total_unique_users = [] 
+try:
+    logging.info("Detecting spammers and analyzing sentiments")
+    
+    # Create lists of all date/time
+    dates = []
+    times = []
+
     matrix_user_features_all_users = []
-    with open(attributes_folder + 'user__favourites_count.txt', 'r') as file_user_listed_as_favorite, open(attributes_folder + 'user__listed_count.txt', 'r') as file_user_listed_by_another_user, open(attributes_folder + 'user__statuses_count.txt' ,'r') as file_user_total_tweets, open(attributes_folder + 'user__followers_count.txt', 'r') as file_user_followers, open(attributes_folder + 'user__friends_count.txt', 'r') as file_user_friends_following, open(attributes_folder + 'user_id.txt', 'r') as file_user_id, open(attributes_folder + 'geo.txt', 'r') as file_user_geo, open(attributes_folder + 'favorite_count.txt', 'r') as file_user_favorited, open(attributes_folder + 'entities__hashtags.txt', 'r') as file_tweet_hashtags, open(attributes_folder + 'text.txt', 'r') as file_tweet_text, open(attributes_folder + 'entities__user_mentions.txt', 'r') as file_user_mentions, open(attributes_folder + "source.txt", 'r') as file_source, open('/home/amirelemam/classificacao.txt', 'r') as file_classificacao:
-        matrix_user_id_vs_spammer_criteria = []
-        for user_favorited, user_added_in_list, user_total_tweets, user_id, user_followers, user_following, user_geo, user_favorited, tweet_hashtags, tweet_text, user_mentions, user_source, classificacao in zip(file_user_listed_as_favorite, file_user_listed_by_another_user, file_user_total_tweets, file_user_id, file_user_followers, file_user_friends_following, file_user_geo, file_user_favorited, file_tweet_hashtags, file_tweet_text, file_user_mentions, file_source, file_classificacao):
-            matrix_user_features = []
-            prob_total = 1
+    matrix_user_id_vs_spammer_criteria = []
 
-            # Number of followers > 30 Weight: 0.53
-            if int(user_following.rstrip('\n')) < 30:
-                prob_total *= 0.53
-                matrix_user_features.append(1)
-            else:
-                matrix_user_features.append(0)
+    # Fill each attribute file with one attribute value per line
+    with open('clean_data.txt', 'r') as File, open('/home/amirelemam/classificacao.txt', 'r') as Classification:
+        try:
+            for line, classification in zip(File, Classification):
+                # Parse tweet from file to JSON format
+                line_object = json.loads(line)
+                    # Goes through each tweet and assess if it is probably from a spammer
+                matrix_user_features = []
+                prob_total = 1
+                following = int(line_object['user']['friends_count'])
+                followers = int(line_object['user']['followers_count'])  
 
-            # Geolocation == true   Weight: 0.85
-            if user_geo == "":
-                prob_total *= 0.85
-                matrix_user_features.append(1)
-            else:
-                matrix_user_features.append(0)
-
-            # User included in another user's favorite  Weight: 0.85
-            if user_favorited == 0:
-                prob_total *= 0.85
-                matrix_user_features.append(1)
-            else:
-                matrix_user_features.append(0)
-
-            # It has used a hashtag at least once   Weight: 0.96
-            if tweet_hashtags == '':
-                prob_total *= 0.96
-                matrix_user_features.append(1)
-            else:
-                matrix_user_features.append(0)
-
-            # Logged in on an iPhone    Weight: 0.917
-            if "iPhone" not in user_source:
-                prob_total *= 0.917
-                matrix_user_features.append(1)
-            else:
-                matrix_user_features.append(0)
-
-            # Mentioned by another user Weight: 1
-            if user_mentions == "":
-                prob_total *= 1
-                matrix_user_features.append(1)
-            else:
-                matrix_user_features.append(0)
-
-            # User has less than 50 tweets  Weight: 0.01
-            if user_total_tweets > 50:
-                prob_total *= 0.01
-                matrix_user_features.append(1)
-            else:
-                matrix_user_features.append(0)
-
-            # User has been included in another user's list Weight: 0.45
-            if user_added_in_list == 0:
-                prob_total *= 0.45
-                matrix_user_features.append(1)
-            else:
-                matrix_user_features.append(0)
-
-            # Number of following is 2x or less Number of followers Weight: 0.5
-            if int(user_followers)*2 < int(user_following):
-                prob_total *= 0.5
-                matrix_user_features.append(1)
-            else:
-                matrix_user_features.append(0)
-
-            matrix_user_features_all_users.append(matrix_user_features)
-            # User has at least one favorite list   Weight: 0.17
-            criteria_prob.append(prob_total)
-
-            # Add probability of being a spammer to a dictionary
-            if 1 - prob_total > 0.5:
-                dict_probable_spammers[str(user_id)] = prob_total
-
-            # Test false positives and true positives
-            if classificacao.strip() == "SPAM":
-                dict_classificacao_manual[str(user_id)] = 1
-            else:
-                dict_classificacao_manual[str(user_id)] = 0
-
-            if 1 - prob_total > 0.991:
-                if classificacao.strip() == "SPAM":
-                    dict_threshold_0_991[str(user_id)] = 1
+                # Number of followers > 30 Weight: 0.53
+                # User's friends/following count
+                if following < 30:
+                    prob_total *= 0.53
+                    matrix_user_features.append(1)
                 else:
-                    dict_threshold_0_991[str(user_id)] = 0
+                    matrix_user_features.append(0)
 
-            if 1 - prob_total > 0.99:
-                if classificacao.strip() == "SPAM":
-                    dict_threshold_0_99[str(user_id)] = 1
+                # Geolocation == true   Weight: 0.85
+                # Tweet's geolocation information
+                if line_object['geo'] is not None:
+                    prob_total *= 0.85
+                    matrix_user_features.append(1)
                 else:
-                    dict_threshold_0_99[str(user_id)] = 0
+                    matrix_user_features.append(0)
 
-            if 1 - prob_total > 0.9:
-                if classificacao.strip() == "SPAM":
-                    dict_threshold_0_9[str(user_id)] = 1
+                # User included in another user's favorite  Weight: 0.85
+                # Save to file number of times the user has been added to 
+                # someone else's favorite list
+                # if line_object['favorite_count'] is not None:
+                #     int(line_object['favorite_count'])
+                if int(line_object['user']['favourites_count']) == 0:
+                    prob_total *= 0.85
+                    matrix_user_features.append(1)
                 else:
-                    dict_threshold_0_9[str(user_id)] = 0
+                    matrix_user_features.append(0)
 
-            # Adds probability of being a spammer to a dictionary
+                # It has used a hashtag at least once   Weight: 0.96
+                # Hashtags used in the tweet
+                if len(line_object['entities']['hashtags']) > 0:
+                    prob_total *= 0.96
+                    matrix_user_features.append(1)
+                else:
+                    matrix_user_features.append(0)
 
-            # Loops creates full data matrix
-            if classificacao.strip() == "SPAM":
-                class_labels.append(1)
-                class_labels_SPAM_NOTSPAM.append("SPAM")
-            else:
-                class_labels.append(0)
-                class_labels_SPAM_NOTSPAM.append("NOT SPAM")
+                # Logged in on an iPhone    Weight: 0.917
+                # Channel used by user to tweet
+                if line_object['source'] is not None:
+                    if "iPhone" not in line_object['source']: 
+                        prob_total *= 0.917
+                        matrix_user_features.append(1)
+                    else:
+                        matrix_user_features.append(0)
+                else:
+                    matrix_user_features.append(0)
 
-            # matrix_data.append([sum(matrix_user_features)])
-            matrix_data.append([prob_total])
+                # Mentioned by another user Weight: 1
+                # Total of user mentions
+                if len(line_object['entities']['user_mentions']) > 0:
+                    prob_total *= 1
+                    matrix_user_features.append(1)
+                else:
+                    matrix_user_features.append(0)
 
-    logging.debug("Sample data analyzed")
+                # User has less than 50 tweets  Weight: 0.01
+                # Save total tweets to file
+                if int(line_object['user']['statuses_count']) > 50:
+                    prob_total *= 0.01
+                    matrix_user_features.append(1)
+                else:
+                    matrix_user_features.append(0)
+
+                # User has been included in another user's list Weight: 0.45
+                # Save number of times the user has been added to
+                # someone else's list
+                if int(line_object['user']['listed_count']) == 0:
+                    prob_total *= 0.45
+                    matrix_user_features.append(1)
+                else:
+                    matrix_user_features.append(0)
+
+                # Number of following is 2x or less Number of followers Weight: 0.5
+                if followers*2 < following:
+                    prob_total *= 0.5
+                    matrix_user_features.append(1)
+                else:
+                    matrix_user_features.append(0)
+
+                matrix_user_features_all_users.append(matrix_user_features)
+                # User has at least one favorite list   Weight: 0.17
+                criteria_prob.append(prob_total)
+
+                user_id = str(line_object['id'])
+                total_unique_users.append(int(user_id))
+                # Add probability of being a spammer to a dictionary
+                if 1 - prob_total > 0.5: 
+                    dict_probable_spammers[str(user_id)] = prob_total
+               
+                # matrix_data.append([sum(matrix_user_features)])
+                matrix_data.append([prob_total])
+
+                item = str(line_object["created_at"])
+                month = item[4:7]
+                day = item[8:10]
+                year = item[26:30]
+                hour = item[11:13]
+                minutes = item[14:16]
+                seconds = item[17:19]
+                dates.append(day + '/' + month + '/' + year)
+                times.append(hour + ':' + minutes + ':' + seconds)
+                    
+                # Does the sentiment analysis
+                # Writes the sentiment fo each user to a file
+                tweet_text = str(line_object['text']) 
+                tweet_id = str(line_object['timestamp_ms']) 
+                for key in sentiments.keys():
+                    for i in range(len(sentiments[key])):
+                        if sentiments[key][i] in tweet_text:
+                            sentiment_analysis["user_id"] = str(user_id.strip("\n"))
+                            sentiment_analysis["sentiment"].add(key)
+
+                for item in sentiment_analysis:
+                    if ", ".join(sentiment_analysis["sentiment"]) != "":
+                        s = "{\"user_id:\" %s, \"tweet_id\": %s, \"sentiments\": %s}\n" % (sentiment_analysis["user_id"], tweet_id, list(sentiment_analysis["sentiment"]))
+                        File.write(str(s))
+
+                # Test false positives and true positives
+                if classification.strip() == "SPAM":
+                    dict_classificacao_manual[str(user_id)] = 1
+                else:
+                    dict_classificacao_manual[str(user_id)] = 0
+
+                if 1 - prob_total > 0.991:
+                    if classification.strip() == "SPAM":
+                        dict_threshold_0_991[str(user_id)] = 1
+                    else:
+                        dict_threshold_0_991[str(user_id)] = 0
+
+                if 1 - prob_total > 0.99:
+                    if classification.strip() == "SPAM":
+                        dict_threshold_0_99[str(user_id)] = 1
+                    else:
+                        dict_threshold_0_99[str(user_id)] = 0
+
+                if 1 - prob_total > 0.9:
+                    if classification.strip() == "SPAM":
+                        dict_threshold_0_9[str(user_id)] = 1
+                    else:
+                        dict_threshold_0_9[str(user_id)] = 0
+
+                # Adds probability of being a spammer to a dictionary
+
+                # Loops creates full data matrix
+                if classification.strip() == "SPAM":
+                    class_labels.append(1)
+                    class_labels_SPAM_NOTSPAM.append("SPAM")
+                else:
+                    class_labels.append(0)
+                    class_labels_SPAM_NOTSPAM.append("NOT SPAM")
+
+                count_tweets += 1
+
+        except:
+            pass
+
+    logging.debug("Spammers detected and sentiments analyzed successfully")
 except Exception as ex:
-    logging.error("Error analyzing sample data")
+    logging.error("Spammers detection and sentiments analysis failed")
+
+    print count_tweets
+
+try:
+    logging.info("\n ----- SAMPLE CHARACTERISTICS ----- \n")
+
+    # Count number of tweets
+    print "Number of tweets: %d" % count_tweets 
+
+    # Count number of unique users
+    print "Number of unique users: %d" % len(set(total_unique_users))
+
+    # Average of tweets per user with graphic
+    if len(set(total_unique_users)):
+        print "Average of tweets per user: %s" % (count_tweets /
+               len(set(total_unique_users)))
+    else:
+        print "Average of tweets per user: 0"
+
+    # Date/time range
+    print "Date range: %s to %s" % (min(dates), max(dates))
+    print "Time range: %s to %s" % (min(times), max(times))
+
+except Exception as ex:
+    logging.error("Error displaying results")
+
+logging.info("\n ---------------- \n")
+
+try:
+    tweets_per_user = list((map(int, total_unique_users).count(x)) for x in
+            map(int, total_unique_users))
+    users_tweeted = list((tweets_per_user.count(x)) for x in set(tweets_per_user))
+    times_tweeted = list(set(tweets_per_user))
+
+    logging.info("Saving graphic \'Qty of tweets per user\' to file")
+
+    # Plot bar graphic of tweets/user
+    plt.bar(times_tweeted, users_tweeted, width=1, color="blue")
+    plt.xlabel('# of tweets')
+    plt.ylabel('Qty users tweeted')
+    plt.title('# of tweets per user')
+    plt.savefig("tweets_per_user.jpg")
+
+    logging.debug("Graphic \'Qty of tweets per user\' successfully saved to file")
+except Exception as ex:
+    logging.error("Failed to save graphic \'Qty of tweets per user\' to file")
+
+try:
+    logging.info("Saving graphic \'Qty of tweets per day\' to file")
+    # Graphic of tweets/day
+    # Count number of tweets/day
+    dict_tweet_count = dict((x, dates.count(x)) for x in set(dates))
+    list_tweet_count = list((dates.count(x)) for x in set(dates))
+
+    # Plot bar graphic of tweets/day
+    x = range(len(list_tweet_count))
+    plt.bar(x, list_tweet_count, width=1, color="blue")
+    plt.xlabel('Day')
+    plt.ylabel('# of tweets')
+    plt.title('# of tweets per day')
+    plt.savefig("tweets_per_day.jpg")
+    # plt.show()
+    logging.debug("Graphic \'Qty of tweets per day\' successfully saved to file")
+except Exception as ex:
+    logging.error("Failed to save graphic \'Qty of tweets per day\' to file")
 
 try:
     logging.info("\nTraining classifier...")
-    
 
     # Binary Decision Tree
     clf_binary_decision_tree = tree.DecisionTreeClassifier()
-    clf_binary_decision_tree = clf_binary_decision_tree.fit(array(matrix_data),
-            array(class_labels_SPAM_NOTSPAM))
+    clf_binary_decision_tree = clf_binary_decision_tree.fit(array(matrix_data), array(class_labels_SPAM_NOTSPAM))
     # clf_binary_decision_tree = clf_binary_decision_tree.fit(matrix_data, class_labels, class_weight_dict)
 
     # Bernoulli
     clf_bernoulli = BernoulliNB()
-    clf_bernoulli.fit(array(matrix_user_features_all_users),
-            array(class_labels_SPAM_NOTSPAM))
+    clf_bernoulli.fit(array(matrix_user_features_all_users), array(class_labels_SPAM_NOTSPAM))
 
     logging.debug("Classifiers trained")
 except Exception as ex:
@@ -635,14 +493,12 @@ except Exception as ex:
 try:
     logging.info("\n --- CLASSIFICATION RESULTS --- ")
 
-    with open('/Attributes/Criteria_vs_ManualClassification.txt',
-            'w+') as f:
+    with open('CriteriaClassification_vs_ManualClassification.txt', 'w+') as f:
         f.write("Criteria\tManual\tBernoulli\tDecision Tree\n")
     print("\nCriteria\tManual\tBernoulli\tDecision Tree")
 
-    for criteria, classification, features in zip(matrix_data,
-            class_labels_SPAM_NOTSPAM, matrix_user_features_all_users):
-        with open('/Attributes/Criteria_vs_ManualClassification.txt', 'a') as f:
+    for criteria, classification, features in zip(matrix_data, class_labels_SPAM_NOTSPAM, matrix_user_features_all_users):
+        with open('CriteriaClassification_vs_ManualClassification.txt', 'a') as f:
             f.write("%f\t%s\t%s\t%s\n" % (criteria[0], classification, clf_bernoulli.predict(array(features))[0], clf_binary_decision_tree.predict(array(sum(list(features))))[0]))
         print "%f\t%s\t%s\t%s" % (criteria[0], classification, clf_bernoulli.predict(array(features))[0], clf_binary_decision_tree.predict(array(sum(list(features))))[0])
 
@@ -658,7 +514,7 @@ except Exception as ex:
 try:
     logging.info("Exporting trained data to file")
     # Export trained data to file
-    with open('/Attributes/trained_data_binary_decision_tree.dot', 'w') as f:
+    with open('trained_data_binary_decision_tree.dot', 'w') as f:
         f = tree.export_graphviz(clf_binary_decision_tree, out_file=f)
 
 #     with open(attributes_folder + 'trained_data_bernoulli.dot', 'w') as f:
@@ -673,11 +529,10 @@ try:
     # Determinate if the probable spammer is above threshold
     # And count the total number of probable spammers
     totalProbableSpammers = 0
-    File = open("/Attributes/probable_spammers.txt", "w+")
+    File = open("probable_spammers.txt", "w+")
     for probableSpammer in dict_probable_spammers.keys():
 #        if dict_probable_spammers[probableSpammer] > 0.1:
-        s = "{%s: %s}\n" % (probableSpammer,
-                dict_probable_spammers[probableSpammer])
+        s = "{%s: %s}\n" % (probableSpammer,  dict_probable_spammers[probableSpammer])
         File.write(str(s))
         totalProbableSpammers += 1
     File.close()
@@ -704,28 +559,4 @@ try:
     print "Over 0.9 True positives: %d\n" % count
     
 except Exception as ex:
-    logging.error("Error detecting spammers")
-
-try:
-    logging.info("Analyzing sentiments...")
-
-    # Does the sentiment analysis
-    # Writes the sentiment fo each user to a file
-    File = open("/Attributes/sentiment_analysis.txt", "w+")
-    with open("/Attributes/text.txt", "r") as file_tweet_text, open("/Attributes/user_id.txt", "r") as file_user_id, open("/Attributes/tweet_id.txt", "r") as file_tweet_id:
-        for tweet_text, user_id, tweet_id in zip(file_tweet_text, file_user_id, file_tweet_id):
-            for key in sentiments.keys():
-                for i in range(len(sentiments[key])):
-                    if sentiments[key][i] in tweet_text:
-                        sentiment_analysis["user_id"] = str(user_id.strip("\n"))
-                        sentiment_analysis["sentiment"].add(key)
-
-            for item in sentiment_analysis:
-                if ", ".join(sentiment_analysis["sentiment"]) != "":
-                    s = "{\"user_id:\" %s, \"tweet_id\": %s, \"sentiments\": %s}\n" % (sentiment_analysis["user_id"], tweet_id, list(sentiment_analysis["sentiment"]))
-                    File.write(str(s))
-    File.close()
-    logging.debug("Sentiments analyzed and saved to file")
-except Exception as ex:
-    logging.error("Error analyzing sentiments or saving it to file")
     print ex

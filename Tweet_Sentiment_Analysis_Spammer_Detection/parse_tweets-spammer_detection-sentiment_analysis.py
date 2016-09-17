@@ -129,7 +129,7 @@ logging.info("\nFinished loading libraries\n")
 #     cur = conn.cursor()
 #     # Execute the query - Download trained data from database
 #     cur.execute("""\COPY (select p.json from paris_analise pa inner join
-#     paris p on p.codtweet = pa.codtweet) TO ‘~/trained_data.txt’""")
+#     paris p on p.codtweet = pa.codtweet) TO '~/trained_data.txt'""")
 #     # Save results to file
 #     _data = codecs.open(os.path.expanduser('~/Desktop/trained_data.txt'), 'w')
 #     for row in cur.fetchall():
@@ -237,14 +237,17 @@ try:
 
     matrix_user_features_all_users = []
     matrix_user_id_vs_spammer_criteria = []
-
+    count = 0
     # Fill each attribute file with one attribute value per line
     with open('clean_data.txt', 'r') as File, open('/home/amirelemam/classificacao.txt', 'r') as Classification:
         try:
             for line, classification in zip(File, Classification):
+                count += 1
+                print "%s\t%s\t%d" % (line, classification, count)
+                
                 # Parse tweet from file to JSON format
                 line_object = json.loads(line)
-                    # Goes through each tweet and assess if it is probably from a spammer
+                # Goes through each tweet and assess if it is probably from a spammer
                 matrix_user_features = []
                 prob_total = 1
                 following = int(line_object['user']['friends_count'])
@@ -358,13 +361,14 @@ try:
                 for key in sentiments.keys():
                     for i in range(len(sentiments[key])):
                         if sentiments[key][i] in tweet_text:
-                            sentiment_analysis["user_id"] = str(user_id.strip("\n"))
+                            sentiment_analysis["user_id"] = user_id
                             sentiment_analysis["sentiment"].add(key)
 
-                for item in sentiment_analysis:
-                    if ", ".join(sentiment_analysis["sentiment"]) != "":
-                        s = "{\"user_id:\" %s, \"tweet_id\": %s, \"sentiments\": %s}\n" % (sentiment_analysis["user_id"], tweet_id, list(sentiment_analysis["sentiment"]))
-                        File.write(str(s))
+                with open('sentiment_analysis.txt', 'a') as sentiment_file:
+                    for item in sentiment_analysis:
+                        if ", ".join(sentiment_analysis["sentiment"]) != "":
+                            s = "{\"user_id:\" %s, \"tweet_id\": %s, \"sentiments\": %s}\n" % (sentiment_analysis["user_id"], tweet_id, list(sentiment_analysis["sentiment"]))
+                            sentiment_file.write(str(s))
 
                 # Test false positives and true positives
                 if classification.strip() == "SPAM":
@@ -401,7 +405,7 @@ try:
                     class_labels_SPAM_NOTSPAM.append("NOT SPAM")
 
                 count_tweets += 1
-
+            
         except:
             pass
 

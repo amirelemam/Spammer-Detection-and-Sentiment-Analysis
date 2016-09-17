@@ -109,29 +109,20 @@ logging.info("\nFinished loading libraries\n")
 #     conn = psycopg2.connect()
 #     # Create cursor
 #     cur = conn.cursor()
-#     # Execute the query - Download all data from database
-#     cur.execute("""SELECT json FROM paris limit 10000""")
-#     # Save results to file
-#     _data = codecs.open(os.path.expanduser('~/Desktop/data10000.txt'), 'w')
-#     for row in cur.fetchall():
-#         _data.write(json.dumps(row[0]) + '\n')
-#     _data.close()
-#     # Close cursor and database connection
-#     cur.close()
-#     conn.close()
-# except:
-#     logging.error("Error reading all data from database")
-
-# try:
-#     # Connection between Python and PostgreSQL
-#     conn = psycopg2.connect()
-#     # Create cursor
-#     cur = conn.cursor()
 #     # Execute the query - Download trained data from database
 #     cur.execute("""\COPY (select p.json from paris_analise pa inner join
-#     paris p on p.codtweet = pa.codtweet) TO '~/trained_data.txt'""")
+#     paris p on p.codtweet = pa.codtweet) TO 'trained_data.txt'""")
+#     # Close cursor and database connection
+#     cur.close()
+#     cur = conn.cursor()
+#     # Execute the query - Download classified data from database
+#     cur.execute("""\COPY (select pa.classificacao from paris_analise pa inner join paris p on p.codtweet = pa.codtweet) TO '/Users/amirelemam/Desktop/classificacao.txt'""")
+#     cur.close()
+#     cur = conn.cursor()
+#     # Execute the query - Download all data from database
+#     cur.execute("""SELECT json FROM paris""")
 #     # Save results to file
-#     _data = codecs.open(os.path.expanduser('~/Desktop/trained_data.txt'), 'w')
+#     _data = codecs.open(os.path.expanduser('data.txt'), 'w')
 #     for row in cur.fetchall():
 #         _data.write(json.dumps(row[0]) + '\n')
 #     _data.close()
@@ -140,7 +131,7 @@ logging.info("\nFinished loading libraries\n")
 #     conn.close()
 # except:
 #     logging.error("Error reading trained data from database")
-
+# 
 # with open("~/trained_data.txt", "r") as s, open("~/clean_data.txt", "w+") as dest:
 #     for line in s:
 #         line = line.replace('\\\\"', "@")
@@ -149,6 +140,9 @@ logging.info("\nFinished loading libraries\n")
 try:
     logging.info("Creating dictionaries")
 
+    with open('sentiment_analysis.txt', 'w+') as f:
+        f.write("Sentiment Analysis\n")
+    
     sentiment_analysis = {
         "user_id": "",
         "sentiment": set(),
@@ -242,8 +236,8 @@ try:
     with open('clean_data.txt', 'r') as File, open('/home/amirelemam/classificacao.txt', 'r') as Classification:
         try:
             for line, classification in zip(File, Classification):
-                count += 1
-                print "%s\t%s\t%d" % (line, classification, count)
+#                 count += 1
+#                 print "%s\t%s\t%d" % (line, classification, count)
                 
                 # Parse tweet from file to JSON format
                 line_object = json.loads(line)
@@ -506,6 +500,15 @@ try:
             f.write("%f\t%s\t%s\t%s\n" % (criteria[0], classification, clf_bernoulli.predict(array(features))[0], clf_binary_decision_tree.predict(array(sum(list(features))))[0]))
         print "%f\t%s\t%s\t%s" % (criteria[0], classification, clf_bernoulli.predict(array(features))[0], clf_binary_decision_tree.predict(array(sum(list(features))))[0])
 
+#   SPAM        SPAM        SPAM            V   VP  VP
+#   NAO SPAM    NAO SPAM    NAO SPAM        F   FP  FP
+#   SPAM        SPAM        NAO SPAM        V   VP  FN
+#   SPAM        NAO SPAM    SPAM            V   FN  VP
+#   NAO SPAM    SPAM        SPAM            F   VN  VN
+#   NAO SPAM    NAO SPAM    SPAM            F   FP  VN
+#   NAO SPAM    SPAM        NAO SPAM        F   VN  FP
+#   SPAM        NAO SPAM    NAO SPAM        V   FN  FN
+
     print("\nProbability for a SURELY NOT SPAM, according to Bernoulli classification:")
     if clf_bernoulli.predict(array([0, 0, 0, 0, 0, 0, 0, 0, 0])) == 1:
         print("SPAM")
@@ -564,3 +567,9 @@ try:
     
 except Exception as ex:
     print ex
+
+# FALTA
+# 1) Automatizar coleta de dados
+# 2) Fazer casos de teste
+# 3) Achar threshold para criterios do artigo
+# 4) Apresentar resultados FP FN VP VN em porcentagem p/ todos métodos

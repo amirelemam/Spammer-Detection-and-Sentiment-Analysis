@@ -573,3 +573,4 @@ except Exception as ex:
 # 2) Fazer casos de teste
 # 3) Achar threshold para criterios do artigo
 # 4) Apresentar resultados FP FN VP VN em porcentagem p/ todos métodos
+# 5) Corrigir código para ficar compatível com Python 3

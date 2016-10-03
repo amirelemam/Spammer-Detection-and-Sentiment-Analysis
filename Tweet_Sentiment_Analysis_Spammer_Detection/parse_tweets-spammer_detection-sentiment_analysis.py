@@ -1,11 +1,5 @@
-# $ export COLOREDLOGS_LOG_FORMAT='%(asctime)s - %(message)s'
-
 import logging
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-# import coloredlogs
-# coloredlogs.install(level='INFO')
-# coloredlogs.install(level='DEBUG')
-# coloredlogs.install(level='ERROR')
 
 logging.info("Loading libraries ...\n")
 
@@ -236,9 +230,6 @@ try:
     with open('clean_data.txt', 'r') as File, open('/home/amirelemam/classificacao.txt', 'r') as Classification:
         try:
             for line, classification in zip(File, Classification):
-#                 count += 1
-#                 print "%s\t%s\t%d" % (line, classification, count)
-                
                 # Parse tweet from file to JSON format
                 line_object = json.loads(line)
                 # Goes through each tweet and assess if it is probably from a spammer
@@ -266,8 +257,6 @@ try:
                 # User included in another user's favorite  Weight: 0.85
                 # Save to file number of times the user has been added to 
                 # someone else's favorite list
-                # if line_object['favorite_count'] is not None:
-                #     int(line_object['favorite_count'])
                 if int(line_object['user']['favourites_count']) == 0:
                     prob_total *= 0.85
                     matrix_user_features.append(1)
@@ -388,8 +377,6 @@ try:
                     else:
                         dict_threshold_0_9[str(user_id)] = 0
 
-                # Adds probability of being a spammer to a dictionary
-
                 # Loops creates full data matrix
                 if classification.strip() == "SPAM":
                     class_labels.append(1)
@@ -493,21 +480,59 @@ try:
 
     with open('CriteriaClassification_vs_ManualClassification.txt', 'w+') as f:
         f.write("Criteria\tManual\tBernoulli\tDecision Tree\n")
-    print("\nCriteria\tManual\tBernoulli\tDecision Tree")
+#   print("\nCriteria\tManual\tBernoulli\tDecision Tree")
+
+    spam_spam_spam = 0
+    spam_not_spam_spam = 0
+    spam_spam_not_spam = 0
+    not_spam_spam_spam = 0
+    not_spam_not_spam_not_spam = 0
+    not_spam_not_spam_spam = 0
+    not_spam_spam_not_spam = 0
+    spam_not_spam_not_spam = 0
 
     for criteria, classification, features in zip(matrix_data, class_labels_SPAM_NOTSPAM, matrix_user_features_all_users):
         with open('CriteriaClassification_vs_ManualClassification.txt', 'a') as f:
             f.write("%f\t%s\t%s\t%s\n" % (criteria[0], classification, clf_bernoulli.predict(array(features))[0], clf_binary_decision_tree.predict(array(sum(list(features))))[0]))
-        print "%f\t%s\t%s\t%s" % (criteria[0], classification, clf_bernoulli.predict(array(features))[0], clf_binary_decision_tree.predict(array(sum(list(features))))[0])
+        if classification == 'SPAM':
+            if clf_bernoulli.predict(array(features))[0] == 'SPAM':
+                if clf_binary_decision_tree.predict(array(sum(list(features))))[0] == 'SPAM':
+                    spam_spam_spam += 1
+                else:
+                    spam_spam_not_spam += 1
+            else:
+                if clf_binary_decision_tree.predict(array(sum(list(features))))[0] == 'SPAM':
+                    spam_not_spam_spam += 1
+                else:
+                    spam_not_spam_not_spam += 1
+        else:
+            if clf_bernoulli.predict(array(features))[0] == 'SPAM':
+                if clf_binary_decision_tree.predict(array(sum(list(features))))[0] == 'SPAM':
+                    not_spam_spam_spam += 1
+                else:
+                    not_spam_spam_not_spam += 1
+            else:
+                if clf_binary_decision_tree.predict(array(sum(list(features))))[0] == 'SPAM':
+                    not_spam_not_spam_spam += 1
+                else:
+                    not_spam_not_spam_not_spam += 1
 
-#   SPAM        SPAM        SPAM            V   VP  VP
-#   NAO SPAM    NAO SPAM    NAO SPAM        F   FP  FP
-#   SPAM        SPAM        NAO SPAM        V   VP  FN
-#   SPAM        NAO SPAM    SPAM            V   FN  VP
-#   NAO SPAM    SPAM        SPAM            F   VN  VN
-#   NAO SPAM    NAO SPAM    SPAM            F   FP  VN
-#   NAO SPAM    SPAM        NAO SPAM        F   VN  FP
-#   SPAM        NAO SPAM    NAO SPAM        V   FN  FN
+    print("MANUAL\t\tBERNOULLI\tDECISION TREE\tTOTAL")
+    print("SPAM\t\tSPAM\t\tSPAM\t\t{}".format(spam_spam_spam))
+    print("SPAM\t\tSPAM\t\tNOT SPAM\t{}".format(spam_spam_not_spam))
+    print("SPAM\t\tNOT SPAM\tSPAM\t\t{}".format(spam_not_spam_spam))
+    print("NOT SPAM\tSPAM\t\tSPAM\t\t{}".format(not_spam_spam_spam))
+    print("NOT SPAM\tNOT SPAM\tNOT SPAM\t{}".format(not_spam_not_spam_not_spam))
+    print("NOT SPAM\tNOT SPAM\tSPAM\t\t{}".format(not_spam_not_spam_spam))
+    print("SPAM\t\tNOT SPAM\tNOT SPAM\t{}".format(spam_not_spam_not_spam))
+    print("NOT SPAM\tSPAM\t\tNOT SPAM\t{}".format(not_spam_spam_not_spam))
+
+    vp = 0
+    vn = 0
+    fp = 0
+    fn = 0
+
+    
 
     print("\nProbability for a SURELY NOT SPAM, according to Bernoulli classification:")
     if clf_bernoulli.predict(array([0, 0, 0, 0, 0, 0, 0, 0, 0])) == 1:
@@ -524,9 +549,6 @@ try:
     with open('trained_data_binary_decision_tree.dot', 'w') as f:
         f = tree.export_graphviz(clf_binary_decision_tree, out_file=f)
 
-#     with open(attributes_folder + 'trained_data_bernoulli.dot', 'w') as f:
-#         f = tree.export_graphviz(clf_bernoulli, out_file=f)
-
     logging.debug("Trained data saved to file")
 except Exception as ex:
     logging.error("Error saving trained data to file")
@@ -538,7 +560,6 @@ try:
     totalProbableSpammers = 0
     File = open("probable_spammers.txt", "w+")
     for probableSpammer in dict_probable_spammers.keys():
-#        if dict_probable_spammers[probableSpammer] > 0.1:
         s = "{%s: %s}\n" % (probableSpammer,  dict_probable_spammers[probableSpammer])
         File.write(str(s))
         totalProbableSpammers += 1
@@ -567,10 +588,3 @@ try:
     
 except Exception as ex:
     print ex
-
-# FALTA
-# 1) Automatizar coleta de dados
-# 2) Fazer casos de teste
-# 3) Achar threshold para criterios do artigo
-# 4) Apresentar resultados FP FN VP VN em porcentagem p/ todos métodos
-# 5) Corrigir código para ficar compatível com Python 3

@@ -206,19 +206,11 @@ try:
         'doesnt have favourite list': 0.17,
     }
 
-    dict_threshold_0_991 = {}
-    dict_threshold_0_99 = {}
-    dict_threshold_0_9 = {}
     criteria_prob = []
     dict_classificacao_manual = {}
-except:
-    pass
+    count_tweets = 0
+    total_unique_users = [] 
 
-count_tweets = 0
-total_unique_users = [] 
-try:
-    logging.info("Detecting spammers and analyzing sentiments")
-    
     # Create lists of all date/time
     dates = []
     times = []
@@ -226,6 +218,12 @@ try:
     matrix_user_features_all_users = []
     matrix_user_id_vs_spammer_criteria = []
     count = 0
+except:
+    pass
+
+try:
+    logging.info("Detecting spammers and analyzing sentiments")
+    
     # Fill each attribute file with one attribute value per line
     with open('clean_data.txt', 'r') as File, open('/home/amirelemam/classificacao.txt', 'r') as Classification:
         try:
@@ -354,34 +352,13 @@ try:
                             sentiment_file.write(str(s))
 
                 # Test false positives and true positives
-                if classification.strip() == "SPAM":
-                    dict_classificacao_manual[str(user_id)] = 1
-                else:
-                    dict_classificacao_manual[str(user_id)] = 0
-
-                if 1 - prob_total > 0.991:
-                    if classification.strip() == "SPAM":
-                        dict_threshold_0_991[str(user_id)] = 1
-                    else:
-                        dict_threshold_0_991[str(user_id)] = 0
-
-                if 1 - prob_total > 0.99:
-                    if classification.strip() == "SPAM":
-                        dict_threshold_0_99[str(user_id)] = 1
-                    else:
-                        dict_threshold_0_99[str(user_id)] = 0
-
-                if 1 - prob_total > 0.9:
-                    if classification.strip() == "SPAM":
-                        dict_threshold_0_9[str(user_id)] = 1
-                    else:
-                        dict_threshold_0_9[str(user_id)] = 0
-
                 # Loops creates full data matrix
                 if classification.strip() == "SPAM":
+                    dict_classificacao_manual[str(user_id)] = 1
                     class_labels.append(1)
                     class_labels_SPAM_NOTSPAM.append("SPAM")
                 else:
+                    dict_classificacao_manual[str(user_id)] = 0
                     class_labels.append(0)
                     class_labels_SPAM_NOTSPAM.append("NOT SPAM")
 
@@ -527,19 +504,42 @@ try:
     print("SPAM\t\tNOT SPAM\tNOT SPAM\t{}".format(spam_not_spam_not_spam))
     print("NOT SPAM\tSPAM\t\tNOT SPAM\t{}".format(not_spam_spam_not_spam))
 
-    vp = 0
-    vn = 0
-    fp = 0
-    fn = 0
 
-    
-
-    print("\nProbability for a SURELY NOT SPAM, according to Bernoulli classification:")
-    if clf_bernoulli.predict(array([0, 0, 0, 0, 0, 0, 0, 0, 0])) == 1:
-        print("SPAM")
+    if count_tweets > 0:
+        bernoulli_true_positive = (spam_spam_spam + spam_spam_not_spam) / count_tweets
+        bernoulli_true_negative = (not_spam_not_spam_not_spam +
+                not_spam_not_spam_spam) / count_tweets
+        bernoulli_false_positive = (not_spam_spam_spam +
+                not_spam_spam_not_spam) / count_tweets
+        bernoulli_false_negative = (spam_not_spam_not_spam +
+                spam_not_spam_spam) / count_tweets
+        decision_tree_true_positive = (spam_spam_spam + spam_not_spam_spam) / count_tweets
+        decision_tree_true_negative = (not_spam_not_spam_not_spam +
+                not_spam_spam_not_spam) / count_tweets
+        decision_tree_false_positive = (not_spam_not_spam_spam +
+                not_spam_spam_spam) / count_tweets
+        decision_tree_false_negative = (spam_spam_not_spam +
+                spam_not_spam_not_spam) / count_tweets
     else:
-        print("NOT SPAM")
-    print("\n")
+        bernoulli_true_positive = 0
+        bernoulli_true_negative = 0
+        bernoulli_false_positive = 0
+        bernoulli_false_negative = 0
+        decision_tree_true_positive = 0
+        decision_tree_true_negative = 0
+        decision_tree_false_positive = 0
+        decision_tree_false_negative = 0
+
+
+    criteria_not_spammer = 0
+    criteria_spammer = 0
+    for criteria in matrix_data:
+        if criteria[0] > 0.009:
+            criteria_not_spammer += 1
+        else:
+            criteria_spammer += 1
+
+
 except Exception as ex:
     logging.error("Error displaying classification results")
 
@@ -568,23 +568,5 @@ try:
     # Prints the total number of probable spammers
     print "\nTotal Probable Spammers: %d\n" % totalProbableSpammers
 
-    print "Over 0.991: %d users" % len(dict_threshold_0_991.keys())
-    count = 0
-    for item in dict_threshold_0_991.keys():
-        count += dict_threshold_0_991[item]
-    print "Over 0.991 True positives: %d\n" % count
-
-    print "Over 0.99: %d users" % len(dict_threshold_0_99.keys())
-    count = 0
-    for item in dict_threshold_0_99.keys():
-        count += dict_threshold_0_99[item]
-    print "Over 0.99 True positives: %d\n" % count
-
-    print "Over 0.9: %d users" % len(dict_threshold_0_9.keys())
-    count = 0
-    for item in dict_threshold_0_9.keys():
-        count += dict_threshold_0_9[item]
-    print "Over 0.9 True positives: %d\n" % count
-    
 except Exception as ex:
     print ex

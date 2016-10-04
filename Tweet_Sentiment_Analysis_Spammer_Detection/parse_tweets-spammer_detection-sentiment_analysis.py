@@ -1,3 +1,4 @@
+from __future__ import division
 import logging
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
@@ -455,10 +456,6 @@ except Exception as ex:
 try:
     logging.info("\n --- CLASSIFICATION RESULTS --- ")
 
-    with open('CriteriaClassification_vs_ManualClassification.txt', 'w+') as f:
-        f.write("Criteria\tManual\tBernoulli\tDecision Tree\n")
-#   print("\nCriteria\tManual\tBernoulli\tDecision Tree")
-
     spam_spam_spam = 0
     spam_not_spam_spam = 0
     spam_spam_not_spam = 0
@@ -468,31 +465,55 @@ try:
     not_spam_spam_not_spam = 0
     spam_not_spam_not_spam = 0
 
+    manual_classification_spammer = 0
+    manual_classification_not_spammer = 0
+
+    bernoulli_classification_spammer = 0
+    bernoulli_classification_not_spammer = 0
+    
+    decision_tree_classification_spammer = 0
+    decision_tree_classification_not_spammer = 0
+
+
     for criteria, classification, features in zip(matrix_data, class_labels_SPAM_NOTSPAM, matrix_user_features_all_users):
         with open('CriteriaClassification_vs_ManualClassification.txt', 'a') as f:
             f.write("%f\t%s\t%s\t%s\n" % (criteria[0], classification, clf_bernoulli.predict(array(features))[0], clf_binary_decision_tree.predict(array(sum(list(features))))[0]))
         if classification == 'SPAM':
+            manual_classification_spammer += 1
             if clf_bernoulli.predict(array(features))[0] == 'SPAM':
+                bernoulli_classification_spammer += 1
                 if clf_binary_decision_tree.predict(array(sum(list(features))))[0] == 'SPAM':
                     spam_spam_spam += 1
+                    decision_tree_classification_spammer += 1
                 else:
                     spam_spam_not_spam += 1
+                    decision_tree_classification_not_spammer += 1
             else:
+                bernoulli_classification_not_spammer += 1
                 if clf_binary_decision_tree.predict(array(sum(list(features))))[0] == 'SPAM':
                     spam_not_spam_spam += 1
+                    decision_tree_classification_spammer += 1
                 else:
                     spam_not_spam_not_spam += 1
+                    decision_tree_classification_not_spammer += 1
         else:
+            manual_classification_not_spammer += 1
             if clf_bernoulli.predict(array(features))[0] == 'SPAM':
+                bernoulli_classification_spammer += 1
                 if clf_binary_decision_tree.predict(array(sum(list(features))))[0] == 'SPAM':
                     not_spam_spam_spam += 1
+                    decision_tree_classification_spammer += 1
                 else:
                     not_spam_spam_not_spam += 1
+                    decision_tree_classification_not_spammer += 1
             else:
+                bernoulli_classification_not_spammer += 1 
                 if clf_binary_decision_tree.predict(array(sum(list(features))))[0] == 'SPAM':
                     not_spam_not_spam_spam += 1
+                    decision_tree_classification_spammer += 1
                 else:
                     not_spam_not_spam_not_spam += 1
+                    decision_tree_classification_not_spammer += 1
 
     print("MANUAL\t\tBERNOULLI\tDECISION TREE\tTOTAL")
     print("SPAM\t\tSPAM\t\tSPAM\t\t{}".format(spam_spam_spam))
@@ -504,42 +525,69 @@ try:
     print("SPAM\t\tNOT SPAM\tNOT SPAM\t{}".format(spam_not_spam_not_spam))
     print("NOT SPAM\tSPAM\t\tNOT SPAM\t{}".format(not_spam_spam_not_spam))
 
-
     if count_tweets > 0:
-        bernoulli_true_positive = (spam_spam_spam + spam_spam_not_spam) / count_tweets
+        bernoulli_true_positive = (spam_spam_spam + spam_spam_not_spam) / count_tweets 
         bernoulli_true_negative = (not_spam_not_spam_not_spam +
-                not_spam_not_spam_spam) / count_tweets
+                not_spam_not_spam_spam) / count_tweets 
         bernoulli_false_positive = (not_spam_spam_spam +
-                not_spam_spam_not_spam) / count_tweets
+                not_spam_spam_not_spam) / count_tweets 
         bernoulli_false_negative = (spam_not_spam_not_spam +
-                spam_not_spam_spam) / count_tweets
-        decision_tree_true_positive = (spam_spam_spam + spam_not_spam_spam) / count_tweets
+                spam_not_spam_spam) / count_tweets 
+        decision_tree_true_positive = (spam_spam_spam + spam_not_spam_spam) / count_tweets 
         decision_tree_true_negative = (not_spam_not_spam_not_spam +
-                not_spam_spam_not_spam) / count_tweets
+                not_spam_spam_not_spam) / count_tweets 
         decision_tree_false_positive = (not_spam_not_spam_spam +
                 not_spam_spam_spam) / count_tweets
         decision_tree_false_negative = (spam_spam_not_spam +
-                spam_not_spam_not_spam) / count_tweets
+                spam_not_spam_not_spam) / count_tweets 
     else:
-        bernoulli_true_positive = 0
-        bernoulli_true_negative = 0
-        bernoulli_false_positive = 0
-        bernoulli_false_negative = 0
-        decision_tree_true_positive = 0
-        decision_tree_true_negative = 0
-        decision_tree_false_positive = 0
-        decision_tree_false_negative = 0
+        bernoulli_true_positive = 0.0
+        bernoulli_true_negative = 0.0
+        bernoulli_false_positive = 0.0
+        bernoulli_false_negative = 0.0
+        decision_tree_true_positive = 0.0
+        decision_tree_true_negative = 0.0
+        decision_tree_false_positive = 0.0
+        decision_tree_false_negative = 0.0
 
+    print("\nBernoulli")
+    print("True Positive: {0:.1f}%".format(bernoulli_true_positive*100))
+    print("True Negativw: {0:.1f}%".format(bernoulli_true_negative*100))
+    print("False Positive: {0:.1f}%".format(bernoulli_false_positive*100))
+    print("False Negative: {0:.1f}%".format(bernoulli_false_negative*100))
+
+    print("\nDecision Tree")
+    print("True Positive: {0:.1f}%".format(decision_tree_true_positive*100))
+    print("True Negativw: {0:.1f}%".format(decision_tree_true_negative*100))
+    print("False Positive: {0:.1f}%".format(decision_tree_false_positive*100))
+    print("False Negative: {0:.1f}%".format(decision_tree_false_negative*100))
 
     criteria_not_spammer = 0
     criteria_spammer = 0
     for criteria in matrix_data:
         if criteria[0] > 0.009:
-            criteria_not_spammer += 1
-        else:
             criteria_spammer += 1
+        else:
+            criteria_not_spammer += 1
 
+    print("\nManual")
+    print("Total spammers: {}".format(manual_classification_spammer))
+    print("Total not spammers: {}".format(manual_classification_not_spammer))
 
+    print("\nCriteria")
+    print("Total spammers: {}".format(criteria_spammer))
+    print("Total not spammers: {}".format(criteria_not_spammer))
+
+    print("\nBernoulli")
+    print("Total spammers: {}".format(bernoulli_classification_spammer))
+    print("Total not spammers: {}".format(bernoulli_classification_not_spammer))
+
+    print("\nDecision Tree")
+    print("Total spammers: {}".format(decision_tree_classification_spammer))
+    print("Total not spammers: {}".format(decision_tree_classification_not_spammer))
+
+    print("\n")
+    
 except Exception as ex:
     logging.error("Error displaying classification results")
 

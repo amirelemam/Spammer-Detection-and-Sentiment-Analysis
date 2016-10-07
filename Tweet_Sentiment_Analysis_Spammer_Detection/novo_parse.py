@@ -97,8 +97,7 @@ try:
 except Exception as ex:
     logging.error("Os loading failed")
 
-# from sklearn.model_selection import train_test_split
-from copy import deepcopy
+from sklearn.model_selection import train_test_split
 
 logging.info("\nFinished loading libraries\n")
 
@@ -145,11 +144,6 @@ try:
         "user_id": "",
         "sentiment": set(),
     }
-
-    manual_classification = []
-    bernoulli_classification = []
-    decision_tree_classification = []
-    sample_features = []
 
     # Dictionary of months
     months = {
@@ -234,117 +228,106 @@ try:
     logging.info("Detecting spammers and analyzing sentiments")
     
     # Fill each attribute file with one attribute value per line
-    with open('clean_data.txt', 'r') as data, open('/home/amirelemam/classificacao.txt', 'r') as Classification:
+    with open('clean_data.txt', 'r') as File, open('/home/amirelemam/classificacao.txt', 'r') as Classification:
         try:
-            for line, classification in zip(data, Classification):
+            for line, classification in zip(File, Classification):
                 # Parse tweet from file to JSON format
                 line_object = json.loads(line)
                 # Goes through each tweet and assess if it is probably from a spammer
-                user_features = []
+                matrix_user_features = []
                 prob_total = 1
                 following = int(line_object['user']['friends_count'])
                 followers = int(line_object['user']['followers_count'])  
-                user_id = str(line_object['id'])
-                total_unique_users.append(int(user_id))
-                
+
                 # Number of followers > 30 Weight: 0.53
                 # User's friends/following count
                 if following < 30:
                     prob_total *= 0.53
-                    user_features.append(1)
+                    matrix_user_features.append(1)
                 else:
-                    user_features.append(0)
+                    matrix_user_features.append(0)
 
                 # Geolocation == true   Weight: 0.85
                 # Tweet's geolocation information
                 if line_object['geo'] is not None:
                     prob_total *= 0.85
-                    user_features.append(1)
+                    matrix_user_features.append(1)
                 else:
-                    user_features.append(0)
+                    matrix_user_features.append(0)
 
                 # User included in another user's favorite  Weight: 0.85
                 # Save to file number of times the user has been added to 
                 # someone else's favorite list
                 if int(line_object['user']['favourites_count']) == 0:
                     prob_total *= 0.85
-                    user_features.append(1)
+                    matrix_user_features.append(1)
                 else:
-                    user_features.append(0)
+                    matrix_user_features.append(0)
 
                 # It has used a hashtag at least once   Weight: 0.96
                 # Hashtags used in the tweet
                 if len(line_object['entities']['hashtags']) > 0:
                     prob_total *= 0.96
-                    user_features.append(1)
+                    matrix_user_features.append(1)
                 else:
-                    user_features.append(0)
+                    matrix_user_features.append(0)
 
                 # Logged in on an iPhone    Weight: 0.917
                 # Channel used by user to tweet
                 if line_object['source'] is not None:
                     if "iPhone" not in line_object['source']: 
                         prob_total *= 0.917
-                        user_features.append(1)
+                        matrix_user_features.append(1)
                     else:
-                        user_features.append(0)
+                        matrix_user_features.append(0)
                 else:
-                    user_features.append(0)
+                    matrix_user_features.append(0)
 
                 # Mentioned by another user Weight: 1
                 # Total of user mentions
                 if len(line_object['entities']['user_mentions']) > 0:
                     prob_total *= 1
-                    user_features.append(1)
+                    matrix_user_features.append(1)
                 else:
-                    user_features.append(0)
+                    matrix_user_features.append(0)
 
                 # User has less than 50 tweets  Weight: 0.01
                 # Save total tweets to file
                 if int(line_object['user']['statuses_count']) > 50:
                     prob_total *= 0.01
-                    user_features.append(1)
+                    matrix_user_features.append(1)
                 else:
-                    user_features.append(0)
+                    matrix_user_features.append(0)
 
                 # User has been included in another user's list Weight: 0.45
                 # Save number of times the user has been added to
                 # someone else's list
                 if int(line_object['user']['listed_count']) == 0:
                     prob_total *= 0.45
-                    user_features.append(1)
+                    matrix_user_features.append(1)
                 else:
-                    user_features.append(0)
+                    matrix_user_features.append(0)
 
                 # Number of following is 2x or less Number of followers Weight: 0.5
                 if followers*2 < following:
                     prob_total *= 0.5
-                    user_features.append(1)
+                    matrix_user_features.append(1)
                 else:
-                    user_features.append(0)
+                    matrix_user_features.append(0)
+
+                matrix_user_features_all_users.append(matrix_user_features)
                 # User has at least one favorite list   Weight: 0.17
+                criteria_prob.append(prob_total)
 
-                # Create list (user register) with user id and list of features
-                user_id_and_features.append(deepcopy(user_id))
-                user_id_and_features.append(deepcopy(user_features))
-                # Insert previous list (user register) in general list
-                sample_features.append(deepcopy(user_id_and_features))
-
-                # Create list (user register) with user id and prob of being
-                # spammer 
-                user_id_and_prob_spammer.append(deepcopy(user_id))
-                user_id_and_prob_spammer.append(deepcopy(prob_total))
-                # Insert previous list (user register) in general list
-                criteria_classification.append(deepcopy(user_id_and_prob_spammer))
-
-                # Create list (user register) with user id and manual
-                # classification
-                user_id_and_manual_cl.append(deepcopy(user_id))
-                user_id_and_manual_cl.append(deepcopy(classification))
-                # Insert previous list (user register) in general list
-                manual_classification.append(deepcopy(user_id_and_manual_cl))
-                
+                user_id = str(line_object['id'])
+                total_unique_users.append(int(user_id))
+                # Add probability of being a spammer to a dictionary
+                if 1 - prob_total > 0.5: 
+                    dict_probable_spammers[str(user_id)] = prob_total
                
+                # matrix_data.append([sum(matrix_user_features)])
+                matrix_data.append([prob_total])
+
                 item = str(line_object["created_at"])
                 month = item[4:7]
                 day = item[8:10]
@@ -367,17 +350,20 @@ try:
 
                 with open('sentiment_analysis.txt', 'a') as sentiment_file:
                     for item in sentiment_analysis:
-                        sentiment_file.write(item)
+                        if ", ".join(sentiment_analysis["sentiment"]) != "":
+                            s = "{\"user_id:\" %s, \"tweet_id\": %s, \"sentiments\": %s}\n" % (sentiment_analysis["user_id"], tweet_id, list(sentiment_analysis["sentiment"]))
+                            sentiment_file.write(str(s))
 
                 # Test false positives and true positives
                 # Loops creates full data matrix
                 classificacao_manual.append([user_id,
                     classification.strip()])
                 if classification.strip() == "SPAM":
-                    class_labels.append((a[1] if a[1] for a
-                        in classificacao_manual))
-                    class_labels_SPAM_NOTSPAM = (a[1] for a
-                        in classificacao_manual)
+                    class_labels.append(1)
+                    class_labels_SPAM_NOTSPAM.append("SPAM")
+                else:
+                    class_labels.append(0)
+                    class_labels_SPAM_NOTSPAM.append("NOT SPAM")
 
                 count_tweets += 1
             
@@ -621,7 +607,13 @@ try:
     logging.info("\nDetecting probable spammers... ")
     # Determinate if the probable spammer is above threshold
     # And count the total number of probable spammers
-#   open("probable_spammers.txt", "w+")
+    totalProbableSpammers = 0
+    File = open("probable_spammers.txt", "w+")
+    for probableSpammer in dict_probable_spammers.keys():
+        s = "{%s: %s}\n" % (probableSpammer,  dict_probable_spammers[probableSpammer])
+        File.write(str(s))
+        totalProbableSpammers += 1
+    File.close()
 
     # Prints the total number of probable spammers
     print "\nTotal Probable Spammers: %d\n" % totalProbableSpammers

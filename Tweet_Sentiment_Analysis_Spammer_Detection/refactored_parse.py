@@ -1,107 +1,20 @@
 from __future__ import division
+
+import json
 import logging
-logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-
-logging.info("Loading libraries ...\n")
-
-try:
-    logging.info("Started loading pdb")
-    import pdb
-    logging.debug("Pdb loaded successfully")
-except Exception as ex:
-    logging.error("Pdb loading failed")
-
-try:
-    logging.info("Started loading psycopg2")
-    import psycopg2.extras
-    logging.debug("Psycopg2 loaded successfully")
-
-except Exception as ex:
-    logging.error("Psycopg2 loading failed")
-
-try:
-    logging.info("Started loading nltk")
-    import nltk
-    logging.debug("Nltk loaded successfully")
-except Exception as ex:
-    logging.error("Nltk loading failed")
-
-try:
-    logging.info("Started loading sklearn.tree")
-    from sklearn import tree
-    logging.debug("Sklearn.tree loaded successfully")
-except Exception as ex:
-    logging.error("Sklearn.tree loading failed")
-
-try:
-    logging.info("Started loading sklearn.naive_bayes.BernoulliNB")
-    from sklearn.naive_bayes import BernoulliNB
-    logging.debug("Sklearn.naive_bayes.BernoulliNB loaded successfully")
-except Exception as ex:
-    logging.error("Sklearn.naive_bayes.BernoulliNB loading failed")
-
-try:
-    logging.info("Started loading sklearn.datasets")
-    from sklearn import datasets
-    logging.debug("Sklearn.datasets loaded successfully")
-except Exception as ex:
-    logging.error("Sklearn.datasets loading failed")
-
-try:
-    logging.info("Started loading numpy.array")
-    from numpy import array
-    logging.debug("Numpy.array loaded successfully")
-except Exception as ex:
-    logging.error("Numpy.array loading failed")
-
-try:
-    logging.info("Started loading StringIO.StringIO")
-    from StringIO import StringIO
-    logging.debug("StringIO loaded successfully")
-except Exception as ex:
-    logging.error("StringIO loading failed")
-
-try:
-    logging.info("Started loading matplotlib")
-    import matplotlib
-    matplotlib.use('Agg')
-    logging.debug("Matplotlib loaded successfully")
-except Exception as ex:
-    logging.error("Matplotlib loading failed")
-
-try:
-    logging.info("Started loading matplotlib.pyplot")
-    import matplotlib.pyplot as plt
-    logging.debug("Matplotlib.pyplot loaded successfully")
-except Exception as ex:
-    logging.error("Matplotlib.pyplot loading failed")
-
-try:
-    logging.info("Started loading codecs")
-    import codecs
-    logging.debug("Codecs loaded successfully")
-except Exception as ex:
-    logging.error("Codecs loading failed")
-
-try:
-    logging.info("Started loading json")
-    import json
-    logging.debug("Json loaded successfully")
-except Exception as ex:
-    logging.error("Json loading failed")
-
-try:
-    logging.info("Started loading os")
-    import os
-    logging.debug("Os loaded successfully")
-except Exception as ex:
-    logging.error("Os loading failed")
-
+import pdb
 # from sklearn.model_selection import train_test_split
 from copy import deepcopy
 
-logging.info("\nFinished loading libraries\n")
+import matplotlib
+import matplotlib.pyplot as plt
+import psycopg2.extras
+from numpy import array
+from sklearn import datasets, tree
+from sklearn.naive_bayes import BernoulliNB
 
+logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+matplotlib.use('Agg')
 # try:
 #     # Connection between Python and PostgreSQL
 #     conn = psycopg2.connect()
@@ -135,58 +48,59 @@ logging.info("\nFinished loading libraries\n")
 #         line = line.replace('\\\\"', "@")
 #         dest.write(str(line))
 
-try:
-    logging.info("Creating dictionaries")
+with open('sentiment_analysis.txt', 'w+') as f:
+    f.write("Sentiment Analysis\n")
 
-    with open('sentiment_analysis.txt', 'w+') as f:
-        f.write("Sentiment Analysis\n")
-    
-    sentiment_analysis = {
-        "user_id": "",
-        "sentiment": set(),
-    }
+sentiment_analysis = {
+    "user_id": "",
+    "sentiment": set(),
+}
 
-    manual_classification = []
-    bernoulli_classification = []
-    decision_tree_classification = []
-    sample_features = []
+manual_classification = []
+bernoulli_classification = []
+decision_tree_classification = []
+sample_features = []
 
-    # Dictionary of months
-    months = {
-        'Jan': '01',
-        'Feb': '02',
-        'Mar': '03',
-        'Apr': '04',
-        'May': '05',
-        'Jun': '06',
-        'Jul': '07',
-        'Aug': '08',
-        'Sep': '09',
-        'Oct': '10',
-        'Nov': '11',
-        'Dec': '12',
-    }
-    # End of dictionary
-    logging.debug("Dicitonaries created successfully")
-except Exception as ex:
-    logging.error("Dictionaries creation failed")
+# Dictionary of months
+months = {
+    'Jan': '01',
+    'Feb': '02',
+    'Mar': '03',
+    'Apr': '04',
+    'May': '05',
+    'Jun': '06',
+    'Jul': '07',
+    'Aug': '08',
+    'Sep': '09',
+    'Oct': '10',
+    'Nov': '11',
+    'Dec': '12',
+}
+# End of dictionary
 
-try:
-    logging.info("Loading dict of sentiments")
-    # Dictionary of sentiments
-    sentiments = {
-        'fear/anxiety': ['anxiety', 'anxious', 'catastrophic', 'concern', 'disaster', 'emergency', 'fear', 'insecure', 'panic', 'scared', 'terror', 'threat', 'trouble', 'warning', 'worry'],
-        'shock': ['taken aback', 'aback', 'floor', 'god bless', 'omg', 'shock', 'stun', 'sudden', 'wtf', 'wth'],
-        'response': ['act', 'asap', 'escape', 'evacuate', 'flee', 'help', 'hide', 'run'],
-        'need information': ['breaking news', 'call', 'foul play', 'incident', 'phone', 'report', 'situation', 'unconfirmed'],
-        'threat': ['accident', 'attack', 'bomb', 'bullet', 'collapse', 'crash', 'explode', 'explosion', 'fire', 'gun', 'hijack', 'hit', 'hostage', 'plane', 'responsability', 'responsable', 'rifle', 'shoot', 'shot', 'struck', 'suicide', 'terrorism'],
-        'casualities': ['blood', 'body', 'bodies', 'corpses', 'corpse', 'dead', 'injury', 'injure', 'kill', 'wounded'],
-        'law enforcement': ['action', 'ambulance', 'command', 'medic', 'operation', 'planes', 'police', 'cops', 'FBI', 'security', 'recover', 'rescue', 'response', 'restore', 'safe', 'safety', 'save', 'shut', 'stay', 'survive', 'suspend'],
-    }
-    # End of dictionary
-    logging.debug("Dict of sentiments loaded successfully")
-except Exception as ex:
-    logging.error("Dict of sentiments loaded failed")
+# Dictionary of sentiments
+sentiments = {
+    'fear/anxiety': ['anxiety', 'anxious', 'catastrophic', 'concern',
+        'disaster', 'emergency', 'fear', 'insecure', 'panic',
+        'scared', 'terror', 'threat', 'trouble', 'warning', 'worry'],
+    'shock': ['taken aback', 'aback', 'floor', 'god bless', 'omg',
+        'shock', 'stun', 'sudden', 'wtf', 'wth'],
+    'response': ['act', 'asap', 'escape', 'evacuate', 'flee', 'help',
+        'hide', 'run'],
+    'need information': ['breaking news', 'call', 'foul play',
+        'incident', 'phone', 'report', 'situation', 'unconfirmed'],
+    'threat': ['accident', 'attack', 'bomb', 'bullet', 'collapse',
+        'crash', 'explode', 'explosion', 'fire', 'gun', 'hijack',
+        'hit', 'hostage', 'plane', 'responsability', 'responsable',
+        'rifle', 'shoot', 'shot', 'struck', 'suicide', 'terrorism'],
+    'casualities': ['blood', 'body', 'bodies', 'corpses', 'corpse',
+        'dead', 'injury', 'injure', 'kill', 'wounded'],
+    'law enforcement': ['action', 'ambulance', 'command', 'medic',
+        'operation', 'planes', 'police', 'cops', 'FBI', 'security',
+        'recover', 'rescue', 'response', 'restore', 'safe', 'safety',
+        'save', 'shut', 'stay', 'survive', 'suspend'],
+}
+# End of dictionary
 
 try:
     logging.info("\nAnalyzing sample data...")

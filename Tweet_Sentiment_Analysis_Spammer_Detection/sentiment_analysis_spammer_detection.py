@@ -346,13 +346,15 @@ class SpammerDetection:
     def criteria_classification(self, users_prob_criteria):
         """Classifies user as spammer or not based on the paper criteria"""
 
-        criteria_probable_spammers = set()
+        classification = []
 
         for user_id, prob_total in users_prob_criteria:
             if 1 - prob_total < 0.009:
-                criteria_probable_spammers.add(user_id)
+                classification.append("SPAM")
+            else:
+                classification.append("NOT SPAM")
 
-        return list(criteria_probable_spammers)
+        return classification
 
     def trains_decision_tree(self, features_list, classifications):
         """Trains Decision Tree Unweighted and returns classifier"""
@@ -388,9 +390,9 @@ class SpammerDetection:
 
         return classification
 
-    # def final_classification(self, bernoulli, decision_tree, multinomial, 
-    #                          not_spam_data):
-    #     for b, dt, m in zip(bernoulli, decision_tree, multinomial):
+    # def final_classification(self, criteria, bernoulli, decision_tree,
+    #                              multinomial, not_spam_data):
+    #     for c, b, dt, m in zip(criteria, bernoulli, decision_tree, multinomial):
 
 
     def cross_validation_10_fold(self, clf, features_list, classifications):
@@ -532,7 +534,13 @@ class Main:
         print("Accuracy Multinomial: {:.2f}".format(accuracy_m))
         print("Accuracy Decision Tree: {:.2f}".format(accuracy_dt))
 
+        # Probability of user being spammer based on features
+        users_prob_spammer = sd.get_prob_based_on_criteria(features)
+        # Remove duplicated users from list of probabilities above
+        prob_spammer = sd.remove_duplicates_prob_criteria(users_prob_spammer)
+        
         ## Classifying data
+        criteria = sd.criteria_classification(prob_spammer)
         bernoulli = sd.classification(clf_b, clean_data)
         decision_tree = sd.classification(clf_dt, clean_data)
         multinomial = sd.classification(clf_m, clean_data)
@@ -548,8 +556,8 @@ class Main:
 
         # Tweets are classified as "SPAM" or "NOT SPAM"
         # Tweets classified as "NOT SPAM" are saved to file
-        # sd.final_classification(bernoulli, decision_tree, multinomial,
-        #                         not_spam_data)
+        # sd.final_classification(criteria, bernoulli, decision_tree,
+        #                           multinomial, not_spam_data)
 
         # --- Sentiment Analysis ---
         s_analysis = SentimentAnalysis()

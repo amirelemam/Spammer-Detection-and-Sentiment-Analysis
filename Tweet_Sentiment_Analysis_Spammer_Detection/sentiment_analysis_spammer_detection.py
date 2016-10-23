@@ -6,19 +6,23 @@ from __future__ import division
 import json
 import logging
 # import pdb
+import warnings
 from copy import deepcopy
 
 import matplotlib
-# import matplotlib.pyplot as plt
-from numpy import array
+import matplotlib.pyplot as plt
 import psycopg2.extras
-from sklearn import tree
+from numpy import array
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import cross_val_score
-from sklearn.naive_bayes import BernoulliNB
+from sklearn.naive_bayes import BernoulliNB, GaussianNB, MultinomialNB
+from sklearn.metrics import confusion_matrix
 
 logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
 matplotlib.use('Agg')
+
+warnings.filterwarnings("ignore")
 
 class DataPreProcessing:
     """Get data from database and clean it"""
@@ -94,20 +98,103 @@ class DataPreProcessing:
                     _output.write(str(line))
         return output_filename
 
-# class SampleCharacteristics:
-#     """Displays and saves information about sample characteristics"""
-#     def plot_and_save_graphics(self):
-#         """"""
+class SampleCharacteristics:
+    """Displays and saves information about sample characteristics"""
 
-    # def display_general_characteristics(self):
-    # """"""
+    def plot_and_save_graphics(self, f_tweets):
+        """"""
+        count_tweets = 0
+        total_unique_users = set()
+        dates = []
+        times = []
 
-    # def display_confusion_matrix(self):
-    # """"""
+        with open(f_tweets + ".txt", "r") as f:
+            for line in f:
+                count_tweets += 1
+                tweet = json.loads(line)
+                total_unique_users.add(tweet['id'])
+
+                item = str(tweet["created_at"])
+                month = item[4:7]
+                day = item[8:10]
+                year = item[26:30]
+                hour = item[11:13]
+                minutes = item[14:16]
+                seconds = item[17:19]
+                dates.append(day + '/' + month + '/' + year)
+                times.append(hour + ':' + minutes + ':' + seconds)
+
+        tweets_per_user = list((map(int, total_unique_users).count(x)) for x in
+                               map(int, total_unique_users))
+        users_tweeted = list((tweets_per_user.count(x)) for x in
+                             set(tweets_per_user))
+        times_tweeted = list(set(tweets_per_user))
+        # Count number of tweets/day
+        dict_tweet_count = dict((x, dates.count(x)) for x in set(dates))
+        list_tweet_count = list((dates.count(x)) for x in set(dates))
+
+        # Plot bar graphic of tweets/user
+        plt.bar(times_tweeted, users_tweeted, width=1, color="blue")
+        plt.xlabel('# of tweets')
+        plt.ylabel('Qty users tweeted')
+        plt.title('# of tweets per user')
+        plt.savefig("tweets_per_user.jpg")
+
+        # Graphic of tweets/day
+        # Plot bar graphic of tweets/day
+        x = range(len(list_tweet_count))
+        plt.bar(x, list_tweet_count, width=1, color="blue")
+        plt.xlabel('Day')
+        plt.ylabel('# of tweets')
+        plt.title('# of tweets per day')
+        plt.savefig("tweets_per_day.jpg")
+
+
+    def display_general_characteristics(self, f_tweets):
+        """"""
+        count_tweets = 0
+        total_unique_users = set()
+        dates = []
+        times = []
+
+        with open(f_tweets + ".txt", "r") as f:
+            for line in f:
+                count_tweets += 1
+                tweet = json.loads(line)
+                total_unique_users.add(tweet['id'])
+
+                item = str(tweet["created_at"])
+                month = item[4:7]
+                day = item[8:10]
+                year = item[26:30]
+                hour = item[11:13]
+                minutes = item[14:16]
+                seconds = item[17:19]
+                dates.append(day + '/' + month + '/' + year)
+                times.append(hour + ':' + minutes + ':' + seconds)
+
+        # Count number of tweets
+        print("Number of tweets: {}".format(count_tweets))
+
+        # Count number of unique users
+        print("Number of unique users: {}".format(len(set(total_unique_users))))
+
+        # Average of tweets per user with graphic
+        if len(set(total_unique_users)):
+            avg = count_tweets / len(set(total_unique_users))
+            print("Average of tweets per user: {:.1f}".format(avg))
+        else:
+            print("Average of tweets per user: 0")
+
+        # Date/time range
+        print("Date range: {} to {}".format(min(dates), max(dates)))
+        print("Time range: {} to {}".format(min(times), max(times)))
 
 
 class SpammerDetection:
     """Spammer detection based on user features"""
+
+    criteria_weights = [0.53, 0.83, 0.85, 0.96, 0.917, 1, 0.01, 0.45, 0.5]
 
     def manual_classification(self, f_tweets, f_classifications):
         """Generate list with user ID and manual classification (SPAM, NAO
@@ -221,8 +308,7 @@ class SpammerDetection:
         """Calculate the probability of user to be a spammer based on the
         criteria weights
         """
-
-        criteria_weights = [0.53, 0.83, 0.85, 0.96, 0.917, 1, 0.01, 0.45, 0.5]
+        weights = self.criteria_weights
         users_prob_criteria = []
 
         for item in features:
@@ -231,7 +317,7 @@ class SpammerDetection:
             prob_spammer = 1
 
             # Multiply each feature by its correspondent weight
-            prob_each_feature = array(list_features) * array(criteria_weights)
+            prob_each_feature = array(list_features) * array(weights)
 
             # Multiply all probs to get the total prob
             for prob in prob_each_feature:
@@ -275,14 +361,14 @@ class SpammerDetection:
 
     def trains_decision_tree_unweighted(self, features_list, classifications):
         """Trains Decision Tree Unweighted and returns classifier"""
-        clf = tree.DecisionTreeClassifier()
+        clf = DecisionTreeClassifier()
         clf = clf.fit(array([features[1] for features in features_list]),
                       array([item[1] for item in classifications])
                      )
         return clf
 
 
-    # def trains_decision_tree_weighted(self, features_list, classification):
+    # def trains_decision_tree_weighted(self, features_list, classifications):
     #     """Trains Decision Tree Weighted and returns classifier"""
 
     def trains_bernoulli_unweighted(self, features_list, classifications):
@@ -292,10 +378,36 @@ class SpammerDetection:
                       array([item[1] for item in classifications])
                      )
         return clf
+    def trains_gaussian_unweighted(self, features_list, classifications):
+        """Trains Naive Bayes Bernoulli Unweighted and returns classifier"""
+        clf = GaussianNB()
+        clf = clf.fit(array([features[1] for features in features_list]),
+                      array([item[1] for item in classifications])
+                     )
+        return clf
+    def trains_multinomial_unweighted(self, features_list, classifications):
+        """Trains Naive Bayes Bernoulli Unweighted and returns classifier"""
+        clf = MultinomialNB()
+        clf = clf.fit(array([features[1] for features in features_list]),
+                      array([item[1] for item in classifications])
+                     )
+        return clf
 
 
-    # def trains_bernoulli_weighted(self, features_list, classification):
-    # """"""
+    # # NAO FUNCIONA
+    # def trains_bernoulli_weighted(self, features_list, classifications):
+    #     """Trains Naive Bayes Bernoulli Weighted and returns classifier"""
+    #     weights = self.criteria_weights
+    #     sample_weights = []
+    #     for features in features_list:
+    #         sample_weights.append(array(features[1]) * array(weights))
+    #     clf = BernoulliNB()
+    #     clf = clf.fit(array([features[1] for features in features_list]),
+    #                   array([item[1] for item in classifications]),
+    #                   sample_weight=array(sample_weights)
+    #                  )
+
+        return clf
 
     def classification(self, clf, data):
         """Classifies data received based on classifier given"""
@@ -303,7 +415,7 @@ class SpammerDetection:
         features = self.get_criteria_features_by_user(data)
         for feature in features:
             label = clf.predict(array(feature[1]))
-            classification.append([deepcopy(feature[0]), deepcopy(label)])
+            classification.append([deepcopy(feature[0]), deepcopy(label[0])])
 
         return classification
 
@@ -314,30 +426,115 @@ class SpammerDetection:
         scores = cross_val_score(clf, data, labels, cv=10)
 
         return scores.mean()
-# class SentimentAnalysis:
-# """"""
-#     def criteria_analysis(self):
-#     """"""
+
+    def confusion_matrix_(self, true, predicted):
+        y_true = array([item[1] for item in true])
+        y_pred = array([item[1] for item in predicted])
+        labels = set(y_true)
+
+        print("Row: truth")
+        print("Column: predicted")
+        print("\t{}".format(" ".join(labels)))
+        for label, row in zip(labels, confusion_matrix(y_true, y_pred)):
+            print("{}\t{}".format(label, row))
+
+
+class SentimentAnalysis:
+    """Does sentiment analysis on text"""
+
+    sentiments = {'fear/anxiety': ['anxiety', 'anxious', 'catastrophic',
+                                   'concern', 'disaster', 'emergency', 'fear',
+                                   'insecure', 'panic', 'scared', 'terror',
+                                   'threat', 'trouble', 'warning', 'worry'],
+                  'shock': ['taken aback', 'aback', 'floor', 'god bless', 'omg',
+                            'shock', 'stun', 'sudden', 'wtf', 'wth'],
+                  'response': ['act', 'asap', 'escape', 'evacuate', 'flee',
+                               'help', 'hide', 'run'],
+                  'need information': ['breaking news', 'call', 'foul play',
+                                       'incident', 'phone', 'report',
+                                       'situation', 'unconfirmed'],
+                  'threat': ['accident', 'attack', 'bomb', 'bullet', 'collapse',
+                             'crash', 'explode', 'explosion', 'fire', 'gun',
+                             'hijack', 'hit', 'hostage', 'plane', 'rifle',
+                             'responsability', 'responsable', 'shoot', 'shot',
+                             'struck', 'suicide', 'terrorism'],
+                  'casualities': ['blood', 'body', 'bodies', 'corpses', 'dead',
+                                  'corpse',  'injury', 'injure', 'kill',
+                                  'wounded'],
+                  'law enforcement': ['action', 'ambulance', 'command', 'medic',
+                                      'operation', 'planes', 'police', 'cops',
+                                      'FBI', 'security', 'recover', 'rescue',
+                                      'response', 'restore', 'safe', 'safety',
+                                      'save', 'shut', 'stay', 'survive',
+                                      'suspend'],
+        }
+
+    def criteria_analysis(self, f_text):
+        """Text sentiment analysis based on paper criteria"""
+
+        sentiment_analysis = {"user_id": "",
+                              "sentiments": set()}
+
+        with open(f_text + ".txt", "r") as f:
+            for line in f:
+                tweet = json.loads(line)
+                for key in self.sentiments.keys():
+                    for keyword in range(len(self.sentiments[key])):
+                        if self.sentiments[key][keyword] in tweet['text']:
+                            sentiment_analysis['user_id'] = tweet['id']
+                            sentiment_analysis['sentiments'].add(key)
+
+        return sentiment_analysis
 
 
 class Main:
     """Initializes script"""
     def start(self):
         """Runs spammer detection and sentiment analysis"""
+
+        clean_data = "clean_data"
+        cl_clean = "cl_clean"
+        cl_data = "classification"
+
         data_pre_processing = DataPreProcessing()
         data_pre_processing.clean_data("paris300", "clean_300")
 
         spammer_detection = SpammerDetection()
-        features = spammer_detection.get_criteria_features_by_user("clean_data")
-        classification = spammer_detection.manual_classification("clean_data",
-                                                                 "classification")
-        clf = spammer_detection.trains_bernoulli_unweighted(features,
-                classification)
-        print(spammer_detection.cross_validation_10_fold(clf, features,
-                                                         classification))
-        # print(spammer_detection.classification(clf, "clean_300"))
+        features = spammer_detection.get_criteria_features_by_user(clean_data)
+        data_pre_processing.clean_data(cl_data, cl_clean,
+                                                  isJson=False)
+        classification = spammer_detection.manual_classification(clean_data,
+                                                                 cl_clean)
 
+        print("Bernoulli")
+        clf = spammer_detection.trains_decision_tree_unweighted(features,
+                                                            classification)
+
+        clf_g = spammer_detection.trains_gaussian_unweighted(features,
+                                                            classification)
+        clf_m = spammer_detection.trains_multinomial_unweighted(features,
+                                                            classification)
+        accuracy = spammer_detection.cross_validation_10_fold(clf, features,
+                                                              classification)
+
+        accuracy_g = spammer_detection.cross_validation_10_fold(clf_g, features,
+                                                              classification)
+        accuracy_m = spammer_detection.cross_validation_10_fold(clf_m, features,
+                                                              classification)
+        # bernoulli_uw = spammer_detection.classification(clf, "clean_300")
+        bernoulli_uw = spammer_detection.classification(clf, clean_data)
+        print("Accuracy Bernoulli: {:.2f}".format(accuracy))
+        print("Accuracy Multinomial: {:.2f}".format(accuracy_m))
+        print("Accuracy Gaussian: {:.2f}".format(accuracy_g))
+        print("---- Confusion matrix ----")
+        spammer_detection.confusion_matrix_(classification, bernoulli_uw)
+        print("--------------------------\n")
+        # Pesos em Bernoulli
+        s_analysis = SentimentAnalysis()
+        s_analysis.criteria_analysis("clean_data")
+        characteristics = SampleCharacteristics()
+        characteristics.display_general_characteristics(clean_data)
+        characteristics.plot_and_save_graphics(clean_data)
 
 if __name__ == '__main__':
     Main().start()
-

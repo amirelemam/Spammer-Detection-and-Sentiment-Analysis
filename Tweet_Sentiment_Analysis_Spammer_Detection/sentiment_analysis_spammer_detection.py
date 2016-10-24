@@ -9,6 +9,7 @@ import warnings
 from copy import deepcopy
 
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import psycopg2.extras
 from numpy import array
@@ -16,8 +17,6 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import cross_val_score
 from sklearn.naive_bayes import BernoulliNB, MultinomialNB
 from sklearn.metrics import confusion_matrix
-
-matplotlib.use('Agg')
 
 warnings.filterwarnings("ignore")
 
@@ -72,7 +71,6 @@ class DataPreProcessing:
     def get_all_tweets_from_database(self, filename):
         """Get all tweets from database"""
         _query = """SELECT json FROM paris"""
-        # _filename = "data"
         self.get_data_from_database_and_save_to_file(_query, filename)
 
     def clean_data(self, input_filename, output_filename, isJson=True):
@@ -349,10 +347,10 @@ class SpammerDetection:
         classification = []
 
         for user_id, prob_total in users_prob_criteria:
-            if 1 - prob_total < 0.009:
-                classification.append("SPAM")
+            if 1 - prob_total < 0.991:
+                classification.append([user_id, "SPAM"])
             else:
-                classification.append("NOT SPAM")
+                classification.append([user_id, "NAO SPAM"])
 
         return classification
 
@@ -383,17 +381,33 @@ class SpammerDetection:
     def classification(self, clf, data):
         """Classifies data received based on classifier given"""
         classification = []
-        features = self.get_criteria_features_by_user(data)
-        for feature in features:
-            label = clf.predict(array(feature[1]))
-            classification.append([deepcopy(feature[0]), deepcopy(label[0])])
+        # user_id__features = self.get_criteria_features_by_user(data)
+        user_id__features = self.get_criteria_features_by_user(data)
+        for line in user_id__features:
+            label = clf.predict(array(line[1]))
+            classification.append([deepcopy(line[0]), deepcopy(label[0])])
 
         return classification
 
-    # def final_classification(self, criteria, bernoulli, decision_tree,
-    #                              multinomial, not_spam_data):
-    #     for c, b, dt, m in zip(criteria, bernoulli, decision_tree, multinomial):
+    def final_classification(self, criteria, bernoulli, decision_tree,
+                                 multinomial):
+        final_classification = []
+        for c, b, dt, m in zip(criteria, bernoulli, decision_tree, multinomial):
+            # c[1], b[1], dt[1] e m[1] sao equivalentes entre si
+            classification = []
+            classification.append(c[1])
+            classification.append(b[1])
+            classification.append(dt[1])
+            classification.append(m[1])
 
+            if classification.count('NAO SPAM') > 2:
+                final_classification.append([deepcopy(c[0]), 'NAO SPAM'])
+            elif classification.count('NAO SPAM') == 2:
+                final_classification.append([deepcopy(c[0]), deepcopy(c[1])])
+            else:
+                final_classification.append([deepcopy(c[0]), 'SPAM'])
+
+        return final_classification
 
     def cross_validation_10_fold(self, clf, features_list, classifications):
         """Calculates mean of 10-fold cross validation"""
@@ -403,11 +417,12 @@ class SpammerDetection:
 
         return scores.mean()
 
-    def confusion_matrix_(self, true, predicted):
+    def confusion_matrix_(self, true, predicted, title):
         y_true = array([item[1] for item in true])
         y_pred = array([item[1] for item in predicted])
         labels = set(y_true)
 
+        print("Method: {}".format(title))
         print("Row: truth")
         print("Column: predicted")
         print("\t{}".format(" ".join(labels)))
@@ -445,25 +460,39 @@ class SentimentAnalysis:
                                       'suspend'],
         }
 
-    def criteria_analysis(self, f_text, f_users_data):
+    def criteria_analysis(self, dict_classif, f_data, f_output):
         """Text sentiment analysis based on paper criteria"""
 
         sentiment_analysis = {"user_id": "",
                               "sentiments": set()}
 
-        with open(f_text + ".txt", "r") as f:
+        with open(f_output + ".txt", "w") as f:
+            pass
+
+        with open(f_data + '.txt', 'r') as f:
             for line in f:
                 tweet = json.loads(line)
-                for key in self.sentiments.keys():
-                    for keyword in range(len(self.sentiments[key])):
-                        if self.sentiments[key][keyword] in tweet['text']:
-                            sentiment_analysis['user_id'] = tweet['id']
-                            sentiment_analysis['sentiments'].add(key)
+                for item in dict_classif:
+                    if item[1] == "SPAM": # classification
+                        pass
+                    else:
+                        if str(tweet['id']) == str(item[0]):
+                            for key in self.sentiments.keys():
+                                for keyword in range(len(self.sentiments[key])):
+                                    if self.sentiments[key][keyword] in tweet['text']:
+                                        sentiment_analysis['user_id'] = tweet['id']
+                                        sentiment_analysis['sentiments'].add(key)
+                            if len(list(sentiment_analysis['sentiments'])) > 0:
+                                with open(f_output + ".txt", "a") as f:
+                                    f.write(str(sentiment_analysis['user_id']))
+                                    f.write('\t')
+                                    f.write(str(list(sentiment_analysis['sentiments'])))
+                                    f.write('\n')
+                                    
+                                sentiment_analysis = {"user_id": "",
+                                  "sentiments": set()}
 
-        with open(f_users_data + ".txt", "w+") as f:
-            f.write(str(sentiment_analysis))
-
-
+                                
 class Main:
     """Initializes script"""
     def start(self):
@@ -473,37 +502,40 @@ class Main:
         # Each variable defines a filename
         raw_data = "tweets"
         test_data = "paris300"
-        clean_data = "clean_data"
+        clean_data = "clean300"
         manual_classif_labels = "classification"
+        manual_classif_clean_labels = "clean_classification"
         manual_classif_raw_data = "trained_data"
         manual_classif_clean_data = "clean_cl_data"
         not_spam_data = "ns_tweets"
         sentiment_analysis = "sentiment_analysis"
 
 
-        # --- Pre Processing Data ---
-        dpp = DataPreProcessing()
-        # Get tweets manually classified from database and save them to file
-        dpp.get_manual_classified_tweets_from_database(manual_classif_raw_data)
-        # Get classification given to tweets from database and save them to
-        # file
-        dpp.get_manual_classification_from_database(manual_classif_labels)
-        # Get all tweets from database and save them to file
-        dpp.get_all_tweets_from_database(raw_data)
-        # Clean all tweets
-        dpp.clean_data(raw_data, clean_data)
-        # Clean tweets manually classified
-        dpp.clean_data(manual_classif_raw_data, manual_classif_clean_data,
-                       isJson=False)
+        # # --- Pre Processing Data ---
+        # dpp = DataPreProcessing()
+        # # Get tweets manually classified from database and save them to file
+        # dpp.get_manual_classified_tweets_from_database(manual_classif_raw_data)
+        # # Get classification given to tweets from database and save them to
+        # # file
+        # dpp.get_manual_classification_from_database(manual_classif_labels)
+        # # Get all tweets from database and save them to file
+        # dpp.get_all_tweets_from_database(raw_data)
+        # # Clean all tweets
+        # dpp.clean_data(test_data, clean_data)
+        # # Clean tweets manually classified
+        # dpp.clean_data(manual_classif_raw_data, manual_classif_clean_data)
+        # # Clean classification given to tweets
+        # dpp.clean_data(manual_classif_labels, manual_classif_clean_labels,
+        #                isJson=False)
 
 
         # --- Spam Detection ---
         sd = SpammerDetection()
         # Get all features from tweets
-        features = sd.get_criteria_features_by_user(clean_data)
+        features = sd.get_criteria_features_by_user(manual_classif_clean_data)
         # Makes list associating user id to manual classification
         classification = sd.manual_classification(manual_classif_clean_data,
-                                                  manual_classif_labels)
+                                                  manual_classif_clean_labels)
 
         ## Training Classifiers
 
@@ -518,13 +550,13 @@ class Main:
 
         # Do Cross Validation 10-Fold to determine accuracy of Decision Tree
         # Classifier
-        accuracy_dt = sd.cross_validation_10_fold(clf_dt, features, 
+        accuracy_dt = sd.cross_validation_10_fold(clf_dt, features,
                                                   classification)
-        # Do Cross Validation 10-Fold to determine accuracy of Multinomial 
+        # Do Cross Validation 10-Fold to determine accuracy of Multinomial
         # Classifier
         accuracy_m = sd.cross_validation_10_fold(clf_m, features,
                                                  classification)
-        # Do Cross Validation 10-Fold to determine accuracy of Bernoulli 
+        # Do Cross Validation 10-Fold to determine accuracy of Bernoulli
         # Classifier
         accuracy_b = sd.cross_validation_10_fold(clf_b, features,
                                                  classification)
@@ -538,32 +570,44 @@ class Main:
         users_prob_spammer = sd.get_prob_based_on_criteria(features)
         # Remove duplicated users from list of probabilities above
         prob_spammer = sd.remove_duplicates_prob_criteria(users_prob_spammer)
-        
+
+        ## Classifying data for test purposes
+        criteria = sd.criteria_classification(prob_spammer)
+        bernoulli = sd.classification(clf_b, manual_classif_clean_data)
+        decision_tree = sd.classification(clf_dt, manual_classif_clean_data)
+        multinomial = sd.classification(clf_m, manual_classif_clean_data)
+
+        print("---- Confusion matrix ----")
+        sd.confusion_matrix_(criteria, bernoulli, title="Bernoulli")
+        sd.confusion_matrix_(criteria, multinomial, title="Multinomial")
+        sd.confusion_matrix_(criteria, decision_tree, title="Decision Tree")
+        print("--------------------------\n")
+
+        # ---- Analysis with yet not classified data ----
+
+        # Get all features from tweets
+        features = sd.get_criteria_features_by_user(clean_data)
+        # Probability of user being spammer based on features
+        users_prob_spammer = sd.get_prob_based_on_criteria(features)
+        # Remove duplicated users from list of probabilities above
+        prob_spammer = sd.remove_duplicates_prob_criteria(users_prob_spammer)
+
         ## Classifying data
         criteria = sd.criteria_classification(prob_spammer)
         bernoulli = sd.classification(clf_b, clean_data)
         decision_tree = sd.classification(clf_dt, clean_data)
         multinomial = sd.classification(clf_m, clean_data)
 
-        print("---- Confusion matrix ----")
-        print("Bernoulli {}".format(sd.confusion_matrix_(classification,
-                                                         bernoulli)))
-        print("Multinomial {}".format(sd.confusion_matrix_(classification,
-                                                           multinomial)))
-        print("Decision Tree {}".format(sd.confusion_matrix_(classification,
-                                                             decision_tree)))
-        print("--------------------------\n")
-
         # Tweets are classified as "SPAM" or "NOT SPAM"
-        # Tweets classified as "NOT SPAM" are saved to file
-        # sd.final_classification(criteria, bernoulli, decision_tree,
-        #                           multinomial, not_spam_data)
+        # Tweets classified as "NOT SPAM" returned as list
+        final_classif = sd.final_classification(criteria, bernoulli,
+                                                decision_tree, multinomial)
 
+        #print final_classif
         # --- Sentiment Analysis ---
         s_analysis = SentimentAnalysis()
         # Analyze sentiments of non-spam tweets and save it + user ID to file
-        s_analysis.criteria_analysis(not_spam_data, sentiment_analysis)
-
+        s_analysis.criteria_analysis(final_classif, clean_data, sentiment_analysis)
 
         # --- Sample Characteristics ---
         characteristics = SampleCharacteristics()

@@ -183,6 +183,22 @@ class SampleCharacteristics:
         print("Date range: {} to {}".format(min(dates), max(dates)))
         print("Time range: {} to {}".format(min(times), max(times)))
 
+    def classification_results(self, classification, title):
+        spam = 0
+        not_spam = 0
+        total_tweets = 0
+
+        for item in classification:
+            if item[1] == "SPAM":
+                spam += 1
+            else:
+                not_spam += 1
+            total_tweets += 1
+    
+        print("\n{}".format(title))
+        print("Spam: {} ({:.1f}%)".format(spam, spam/total_tweets*100))
+        print("Not Spam: {} ({:.1f}%)".format(not_spam, not_spam/total_tweets*100))
+
 
 class SpammerDetection:
     """Spammer detection based on user features"""
@@ -340,7 +356,7 @@ class SpammerDetection:
             unique_prob_criteria.append([user_id, prob])
 
         return unique_prob_criteria
-
+    
     def criteria_classification(self, users_prob_criteria):
         """Classifies user as spammer or not based on the paper criteria"""
 
@@ -381,7 +397,7 @@ class SpammerDetection:
     def classification(self, clf, data):
         """Classifies data received based on classifier given"""
         classification = []
-        # user_id__features = self.get_criteria_features_by_user(data)
+
         user_id__features = self.get_criteria_features_by_user(data)
         for line in user_id__features:
             label = clf.predict(array(line[1]))
@@ -460,11 +476,24 @@ class SentimentAnalysis:
                                       'suspend'],
         }
 
+    def sentiment_analysis(self, user_id, tweet, f_output):
+        sentiment_analysis = set()
+
+        for key in self.sentiments.keys():
+            for keyword in range(len(self.sentiments[key])):
+                if self.sentiments[key][keyword] in tweet:
+                    sentiment_analysis.add(key)
+            if len(list(sentiment_analysis)) > 0:
+                with open(f_output + ".txt", "a") as f:
+                    f.write(str(user_id))
+                    f.write('\t')
+                    f.write(str(list(sentiment_analysis)))
+                    f.write('\n')
+
+
+
     def criteria_analysis(self, dict_classif, f_data, f_output):
         """Text sentiment analysis based on paper criteria"""
-
-        sentiment_analysis = {"user_id": "",
-                              "sentiments": set()}
 
         with open(f_output + ".txt", "w") as f:
             pass
@@ -473,25 +502,10 @@ class SentimentAnalysis:
             for line in f:
                 tweet = json.loads(line)
                 for item in dict_classif:
-                    if item[1] == "SPAM": # classification
-                        pass
-                    else:
-                        if str(tweet['id']) == str(item[0]):
-                            for key in self.sentiments.keys():
-                                for keyword in range(len(self.sentiments[key])):
-                                    if self.sentiments[key][keyword] in tweet['text']:
-                                        sentiment_analysis['user_id'] = tweet['id']
-                                        sentiment_analysis['sentiments'].add(key)
-                            if len(list(sentiment_analysis['sentiments'])) > 0:
-                                with open(f_output + ".txt", "a") as f:
-                                    f.write(str(sentiment_analysis['user_id']))
-                                    f.write('\t')
-                                    f.write(str(list(sentiment_analysis['sentiments'])))
-                                    f.write('\n')
-                                    
-                                sentiment_analysis = {"user_id": "",
-                                  "sentiments": set()}
-
+                    # Check if the user is not a probable spammer
+                    # And if the user's author is the same as it is compared
+                    if item[1] != "SPAM" and str(tweet['id']) == str(item[0]):
+                        self.sentiment_analysis(item[0], tweet['text'], f_output)
                                 
 class Main:
     """Initializes script"""
@@ -598,12 +612,15 @@ class Main:
         decision_tree = sd.classification(clf_dt, clean_data)
         multinomial = sd.classification(clf_m, clean_data)
 
+        # Ver quantidade de spammers para cada metodo de classificacao
+
+
         # Tweets are classified as "SPAM" or "NOT SPAM"
         # Tweets classified as "NOT SPAM" returned as list
         final_classif = sd.final_classification(criteria, bernoulli,
                                                 decision_tree, multinomial)
 
-        #print final_classif
+        
         # --- Sentiment Analysis ---
         s_analysis = SentimentAnalysis()
         # Analyze sentiments of non-spam tweets and save it + user ID to file
@@ -615,6 +632,13 @@ class Main:
         characteristics.display_general_characteristics(clean_data)
         # Save data characteristics' graphics to file
         characteristics.plot_and_save_graphics(clean_data)
+
+        characteristics.classification_results(bernoulli, title="Bernoulli")
+        characteristics.classification_results(multinomial, title="Multinomial")
+        characteristics.classification_results(decision_tree, title="Decision Tree")
+        characteristics.classification_results(criteria, title="Criteria")
+        characteristics.classification_results(final_classif, title="Final Classification")
+
 
 if __name__ == '__main__':
     Main().start()

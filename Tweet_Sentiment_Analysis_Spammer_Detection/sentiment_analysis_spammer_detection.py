@@ -82,13 +82,13 @@ class DataPreProcessing:
         with open(input_filename + ".txt", 'r') as _input, \
              open(output_filename + ".txt", 'a') as _output:
             if isJson:
-                for line in _input:
-                    line = line.replace('\\\\"', "@")
-                    _output.write(str(line))
+                for row in _input:
+                    row = row.replace('\\\\"', "@")
+                    _output.write(str(row))
             else:
-                for line in _input:
-                    line = line.replace("\xc3\x83", "A")
-                    _output.write(str(line))
+                for row in _input:
+                    row = row.replace("\xc3\x83", "A")
+                    _output.write(str(row))
         return output_filename
 
 class SampleCharacteristics:
@@ -409,7 +409,6 @@ class SpammerDetection:
                                  multinomial):
         final_classification = []
         for c, b, dt, m in zip(criteria, bernoulli, decision_tree, multinomial):
-            # c[1], b[1], dt[1] e m[1] sao equivalentes entre si
             classification = []
             classification.append(c[1])
             classification.append(b[1])
@@ -445,6 +444,28 @@ class SpammerDetection:
         for label, row in zip(labels, confusion_matrix(y_true, y_pred)):
             print("{}\t{}".format(label, row))
 
+    def criteria_accuracy(self, predicted, true):
+        spam_pred = [item[1] for item in predicted].count('SPAM')
+        not_spam_pred = [item[1] for item in predicted].count("NAO SPAM") 
+        spam_true = [item[1] for item in true].count('SPAM')
+        not_spam_true = [item[1] for item in true].count("NAO SPAM") 
+        
+        if spam_true > 0:
+            accuracy_spam = 1 - (abs(spam_pred - spam_true) / spam_true)
+        else:
+            accuracy_spam = 0
+
+        if not_spam_true > 0:
+            accuracy_not_spam = 1 - (abs(not_spam_pred - not_spam_true) / not_spam_true)
+        else:
+            accuracy_not_spam = 0
+
+        accuracy = (accuracy_spam + accuracy_not_spam) / 2
+        print("Accuracy Criteria: {:.2f}".format(accuracy))
+        print("\tCriteria True Spam: {}".format(spam_true))
+        print("\tCriteria Predicted Spam: {}".format(spam_pred))
+        print("\tCriteria True Not Spam: {}".format(not_spam_true))
+        print("\tCriteria Predicted Not Spam: {}".format(not_spam_pred))
 
 class SentimentAnalysis:
     """Does sentiment analysis on text"""
@@ -514,8 +535,7 @@ class Main:
 
         # --- Filenames' Variables ---
         # Each variable defines a filename
-        raw_data = "tweets"
-        test_data = "paris300"
+        raw_data = "paris300"
         clean_data = "clean300"
         manual_classif_labels = "classification"
         manual_classif_clean_labels = "clean_classification"
@@ -525,22 +545,22 @@ class Main:
         sentiment_analysis = "sentiment_analysis"
 
 
-        # # --- Pre Processing Data ---
-        # dpp = DataPreProcessing()
-        # # Get tweets manually classified from database and save them to file
+        # --- Pre Processing Data ---
+        dpp = DataPreProcessing()
+        # Get tweets manually classified from database and save them to file
         # dpp.get_manual_classified_tweets_from_database(manual_classif_raw_data)
-        # # Get classification given to tweets from database and save them to
-        # # file
+        # Get classification given to tweets from database and save them to
+        # file
         # dpp.get_manual_classification_from_database(manual_classif_labels)
-        # # Get all tweets from database and save them to file
+        # Get all tweets from database and save them to file
         # dpp.get_all_tweets_from_database(raw_data)
-        # # Clean all tweets
-        # dpp.clean_data(test_data, clean_data)
-        # # Clean tweets manually classified
-        # dpp.clean_data(manual_classif_raw_data, manual_classif_clean_data)
-        # # Clean classification given to tweets
-        # dpp.clean_data(manual_classif_labels, manual_classif_clean_labels,
-        #                isJson=False)
+        # Clean all tweets
+        dpp.clean_data(raw_data, clean_data)
+        # Clean tweets manually classified
+        dpp.clean_data(manual_classif_raw_data, manual_classif_clean_data)
+        # Clean classification given to tweets
+        dpp.clean_data(manual_classif_labels, manual_classif_clean_labels,
+                       isJson=False)
 
 
         # --- Spam Detection ---
@@ -559,6 +579,17 @@ class Main:
         clf_m = sd.trains_multinomial(features, classification)
         # Trains classifier based on Naive Bayes Bernoulli method
         clf_b = sd.trains_bernoulli(features, classification)
+
+        # Probability of user being spammer based on features
+        users_prob_spammer = sd.get_prob_based_on_criteria(features)
+        # Remove duplicated users from list of probabilities above
+        prob_spammer = sd.remove_duplicates_prob_criteria(users_prob_spammer)
+
+        ## Classifying data for test purposes
+        criteria = sd.criteria_classification(prob_spammer)
+        bernoulli = sd.classification(clf_b, manual_classif_clean_data)
+        decision_tree = sd.classification(clf_dt, manual_classif_clean_data)
+        multinomial = sd.classification(clf_m, manual_classif_clean_data)
 
         ## 10-Fold Cross Validation of classifiers
 
@@ -579,17 +610,7 @@ class Main:
         print("Accuracy Bernoulli: {:.2f}".format(accuracy_b))
         print("Accuracy Multinomial: {:.2f}".format(accuracy_m))
         print("Accuracy Decision Tree: {:.2f}".format(accuracy_dt))
-
-        # Probability of user being spammer based on features
-        users_prob_spammer = sd.get_prob_based_on_criteria(features)
-        # Remove duplicated users from list of probabilities above
-        prob_spammer = sd.remove_duplicates_prob_criteria(users_prob_spammer)
-
-        ## Classifying data for test purposes
-        criteria = sd.criteria_classification(prob_spammer)
-        bernoulli = sd.classification(clf_b, manual_classif_clean_data)
-        decision_tree = sd.classification(clf_dt, manual_classif_clean_data)
-        multinomial = sd.classification(clf_m, manual_classif_clean_data)
+        sd.criteria_accuracy(criteria, classification)
 
         print("---- Confusion matrix ----")
         sd.confusion_matrix_(criteria, bernoulli, title="Bernoulli")

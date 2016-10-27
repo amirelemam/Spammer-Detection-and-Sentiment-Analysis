@@ -52,8 +52,8 @@ class DataPreProcessing:
         return filename
 
     def get_manual_classified_tweets_from_database(self, filename):
-        """Get tweets manually classified from database
-        and save them to a file
+        """
+        Get tweets manually classified from database and save them to a file
         """
         _query = """select p.json from paris_analise pa
                  inner join paris p on p.codtweet = pa.codtweet
@@ -511,8 +511,6 @@ class SentimentAnalysis:
                     f.write(str(list(sentiment_analysis)))
                     f.write('\n')
 
-
-
     def criteria_analysis(self, dict_classif, f_data, f_output):
         """Text sentiment analysis based on paper criteria"""
 
@@ -535,8 +533,8 @@ class Main:
 
         # --- Filenames' Variables ---
         # Each variable defines a filename
-        raw_data = "paris300"
-        clean_data = "clean300"
+        raw_data = "paris"
+        clean_data = "clean_sample"
         manual_classif_labels = "classification"
         manual_classif_clean_labels = "clean_classification"
         manual_classif_raw_data = "trained_data"

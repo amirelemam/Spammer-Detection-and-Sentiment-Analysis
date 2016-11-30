@@ -43,9 +43,9 @@ class DataPreProcessing(object):
     def get_data_from_database_and_save_to_file(self, query, filename,
                                                 isJson=True):
         # Connection between Python and PostgreSQL
-        conn = psycopg2.connect(database='twitter', user='amir',
-                                password='pg123@', host='143.107.137.90',
-                                port='5432')
+        conn = psycopg2.connect(database='', user='',
+                                password='@', host='',
+                                port='')
         # Create cursor
         cur = conn.cursor()
         # Execute the query

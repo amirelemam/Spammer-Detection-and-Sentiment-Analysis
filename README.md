@@ -5,4 +5,4 @@
 
 ### License
 
-These files are licensed under the [MIT License](http://choosealicense.com/licenses/mit/)
+These files are licensed under the [MIT License](LICENSE)

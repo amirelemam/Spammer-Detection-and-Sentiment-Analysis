@@ -2,8 +2,6 @@
 
 ## Detecção de Spammer e Análise de Sentimentos
 
-### Descrição
-
 Este projeto consiste na análise de um grupo de 7.189.160 __tweets__, que foram filtrados a partir de hashtags relacionadas aos ataques terroristas em Paris, em 13 de novembro de 2015. 
 
 O objetivo principal é identificar __spammers__ através das características do usuário, que são obtidas nos metadados do __tweet__. O objetivo secundário é identificar sentimentos experimentados pelos usuários durante a postagem de seus __tweets__.
@@ -45,11 +43,11 @@ Segue abaixo a lista com o nome dos métodos e seu papel no código:
 ```
 ### Arquivos
 
-**remove_training**: Retira do arquivo com os dados os tweets usados no treinamento. 
-**quebralinhas**: Quebra o arquivo com os dados em 15 arquivos, com 500 mil tweets cada, este número foi definido baseando-se no tamanho médio que o arquivo de 500 mil tweets tinha. Deveria ser um tamanho adequado para o servidor.
-**bash**: Gerencia a fila de arquivos, fazendo com que o processamento de cada arquivo seja feito de forma sequencial.
-**spammer_detection_and_sentiment_analysis**: Faz a análise de cada tweet para detectar spam e fazer análise de sentimentos. 
-**paris.txt** (externo): Base de dados com 7.189.160 tweets, relacionados aos ataques terroristas de 13 de novembro de 2015, em Paris, na França. A base de dados completa pode ser obtida [aqui](), no [Mirror 1]() e no [Mirror 2]() (46GB). 
+**remove_training**: Retira do arquivo com os dados os tweets usados no treinamento.   
+**quebralinhas**: Quebra o arquivo com os dados em 15 arquivos, com 500 mil tweets cada, este número foi definido baseando-se no tamanho médio que o arquivo de 500 mil tweets tinha. Deveria ser um tamanho adequado para o servidor.  
+**bash**: Gerencia a fila de arquivos, fazendo com que o processamento de cada arquivo seja feito de forma sequencial.  
+**spammer_detection_and_sentiment_analysis**: Faz a análise de cada tweet para detectar spam e fazer análise de sentimentos.   
+**paris.txt** (externo): Base de dados com 7.189.160 tweets, relacionados aos ataques terroristas de 13 de novembro de 2015, em Paris, na França. A base de dados completa pode ser obtida [aqui](), no [Mirror 1]() e no [Mirror 2]() (46GB).   
 
 ### Resultado
 

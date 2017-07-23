@@ -51,7 +51,7 @@ Caso a palavra-chave estivesse no tweet, o tweet era "marcado" com aquele sentim
 
 ### Instalação
 
-> Nota: Os seguintes comandos funcionam em Linux e macOS. Se você está usando Windows, os passos são os mesmos, porém os comandos são diferentes.  
+> Nota: Os seguintes comandos funcionam em Linux e macOS. Se você está usando Windows, os passos são os mesmos, porém os comandos podem ser diferentes.  
 
 * Baixe e instale Python 2.7+ ou 3.6+ do [site oficial](https://www.python.org/downloads/).  
 * Baixe o projeto e extraia seu conteúdo, você deve ver uma pasta chamada `Spammer-Detection-and-Sentiment-Analysis`.  

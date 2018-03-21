@@ -55,7 +55,7 @@ Caso a palavra-chave estivesse no tweet, o tweet era "marcado" com aquele sentim
 
 * Baixe e instale Python 2.7+ ou 3.6+ do [site oficial](https://www.python.org/downloads/).  
 * Baixe o projeto e extraia seu conteúdo, você deve ver uma pasta chamada `Spammer-Detection-and-Sentiment-Analysis`.  
-* Baixe a base de dados [aqui](https://mega.nz/#!s7RjwQoI!wGrWRxv-YTj8hLgIh1LZRl-kHfquIbUtrYi6H1VQB-0) (46GB).
+* Baixe a base de dados [aqui](https://mega.nz/#!s7RjwQoI!wGrWRxv-YTj8hLgIh1LZRl-kHfquIbUtrYi6H1VQB-0) ou [aqui](https://mega.nz/#!iYUhGAoT!wGrWRxv-YTj8hLgIh1LZRl-kHfquIbUtrYi6H1VQB-0) (46GB).
 * No Terminal ou Prompt de Comando, acesse a pasta onde você extraiu o projeto.  
 * Copie a pasta Spammer-Detection-and-Sentiment-Analysis para sua pasta Home:  
 ```$ cp -R Spammer-Detection-and-Sentiment-Analysis ~/```  
